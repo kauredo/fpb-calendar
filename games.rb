@@ -26,20 +26,20 @@ MONTH_MAP = {
 
 KEY_FILE_PATH = './simecq-calendar-0801232616b8.json'
 
-def extract_games(url)
+def extract_team_data(url)
   uri = URI.parse(url)
   http = Net::HTTP.new(uri.host, uri.port)
   http.use_ssl = true
-  http.verify_mode = OpenSSL::SSL::VERIFY_NONE # Be cautious with this in production
+  http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
   response = http.get(uri.request_uri)
   html = response.body
-
   doc = Nokogiri::HTML(html)
+
+  team_name = doc.css('div.team-nome').text.strip
 
   games = []
   day_wrappers = doc.css('div.day-wrapper')
-
   day_wrappers.each do |day_wrapper|
     date_element = day_wrapper.at_css('h3.date')
     next unless date_element
@@ -48,7 +48,6 @@ def extract_games(url)
     next if date_text.to_i.zero?
 
     day, month_abbr, year = date_text.split(/\s+/)
-
     # Map Portuguese month abbreviation to English
     english_month_abbr = MONTH_MAP[month_abbr.upcase] || month_abbr
 
@@ -60,12 +59,10 @@ def extract_games(url)
     game_wrappers.each do |game_wrapper|
       time_element = game_wrapper.at_css('div.hour')
       time_text = time_element&.text&.strip || ''
-
       teams = game_wrapper.css('span.fullName').map(&:text).map(&:strip)
-
       location_element = game_wrapper.at_css('div.location-wrapper')
       competition = location_element&.css('div.competition')&.text&.strip
-      location = location_element&.text&.strip.split("\r\n").map {|l| l&.strip }.reject(&:empty?) - [competition]
+      location = location_element&.text&.strip.split("\r\n").map { |l| l&.strip }.reject(&:empty?) - [competition]
 
       games << {
         date: date,
@@ -77,16 +74,32 @@ def extract_games(url)
     end
   end
 
-  games
+  { team_name: team_name, games: games }
 end
 
 def add_to_google_calendar(service, calendar_id, games)
   games.each do |game|
-    # Convert the date string to a Time object
+    # Convert the date and time string to a Time object
     start_time = Time.parse("#{game[:date]} #{game[:time]}")
+    event_summary = "#{game[:teams].first} vs #{game[:teams].last}"
+
+    # Query for existing events in a time window around start_time
+    existing_events = service.list_events(calendar_id,
+      single_events: true,
+      order_by: 'startTime',
+      time_min: start_time.iso8601,
+      time_max: (start_time + 3600).iso8601,  # adjust time window as needed
+      q: event_summary
+    ).items
+
+    # Skip adding if an event with the same summary already exists
+    if existing_events.any? { |event| event.summary == event_summary }
+      puts "Event already exists: #{event_summary}"
+      next
+    end
 
     event = Google::Apis::CalendarV3::Event.new(
-      summary: "#{game[:teams].first} vs #{game[:teams].last}",
+      summary: event_summary,
       description: "#{game[:teams].join(', ')} => #{game[:competition]}",
       location: game[:location],
       start: Google::Apis::CalendarV3::EventDateTime.new(
@@ -94,10 +107,10 @@ def add_to_google_calendar(service, calendar_id, games)
         time_zone: 'Europe/Lisbon'
       ),
       end: Google::Apis::CalendarV3::EventDateTime.new(
-        date_time: (start_time + 9000).iso8601, # Add 3600 seconds for 2.5 hour
+        date_time: (start_time + 9000).iso8601, # Adjust duration as needed
         time_zone: 'Europe/Lisbon'
       ),
-      visibility: 'public',
+      visibility: 'public'
     )
 
     result = service.insert_event(calendar_id, event)
@@ -117,20 +130,108 @@ def authorize_google_calendar
   credentials
 end
 
-def get_calendar(service)
-  result = service.get_calendar('f24d0e0c15327182dda64a93892352a39792fc347182c263c72ee32045638a70@group.calendar.google.com')
-  return result.id
+# Returns the calendar ID for the given URL,
+# creating a new calendar if necessary.
+def find_or_create_calendar(service, url, team_name, mapping_file = 'calendars.json')
+  calendars = File.exist?(mapping_file) ? JSON.parse(File.read(mapping_file)) : {}
+
+  if calendars.key?(url)
+    calendar_id = calendars[url]
+    begin
+      service.get_calendar(calendar_id)
+      puts "Found existing calendar for URL #{url}"
+    rescue Google::Apis::ClientError => e
+      puts "Calendar with ID #{calendar_id} not found; creating a new one..."
+      calendar_id = create_calendar_for_team(service, team_name, url)
+      calendars[url] = calendar_id
+      File.write(mapping_file, calendars.to_json)
+    end
+  else
+    puts "No calendar mapping found for URL #{url}; creating a new calendar..."
+    calendar_id = create_calendar_for_team(service, team_name, url)
+    calendars[url] = calendar_id
+    File.write(mapping_file, calendars.to_json)
+  end
+
+  calendar_id
+end
+
+def create_calendar_for_team(service, team_name, url)
+  # If team_name is nil or empty, fall back to deriving from URL.
+  team_name ||= url.split("/").reject(&:empty?).last || "Team Calendar"
+  calendar = Google::Apis::CalendarV3::Calendar.new(
+    summary: team_name,
+    time_zone: 'Europe/Lisbon'
+  )
+  result = service.insert_calendar(calendar)
+  puts "Created new calendar: #{result.summary} (ID: #{result.id})"
+  result.id
+end
+
+def ensure_calendar_has_team_name(service, calendar_id, team_name)
+  current_calendar = service.get_calendar(calendar_id)
+  if current_calendar.summary != team_name
+    update_calendar_name(service, calendar_id, team_name)
+  else
+    puts "Calendar #{calendar_id} already has the correct team name."
+  end
+end
+
+def update_calendar_name(service, calendar_id, new_summary)
+  calendar = Google::Apis::CalendarV3::Calendar.new(summary: new_summary)
+  service.patch_calendar(calendar_id, calendar)
+  puts "Updated calendar #{calendar_id} to new name: #{new_summary}"
+end
+
+def share_calendar_with_emails(service, calendar_id, emails_file = 'emails.txt')
+  # Read emails from the file, one per line, and remove extra whitespace.
+  emails = File.readlines(emails_file).map(&:strip)
+
+  emails.each do |email|
+    share_calendar_with_email(service, calendar_id, email)
+  end
+end
+
+def share_calendar_with_email(service, calendar_id, email)
+  # List the existing ACL rules for the calendar
+  acl_list = service.list_acls(calendar_id).items
+
+  # Check if the calendar is already shared with this email
+  already_shared = acl_list.any? do |acl|
+    acl.scope.type == 'user' && acl.scope.value == email
+  end
+
+  unless already_shared
+    acl_rule = Google::Apis::CalendarV3::AclRule.new(
+      scope: Google::Apis::CalendarV3::AclRule::Scope.new(
+        type: 'user',
+        value: email
+      ),
+      role: 'writer'
+    )
+    service.insert_acl(calendar_id, acl_rule)
+    puts "Shared calendar #{calendar_id} with #{email}"
+  else
+    puts "Calendar #{calendar_id} is already shared with #{email}"
+  end
 end
 
 service = Google::Apis::CalendarV3::CalendarService.new
 service.authorization = authorize_google_calendar
 
-calendar_id = get_calendar(service)
+# read urls from calendars.json
+urls = JSON.parse(File.read('calendars.json')).keys
+urls.each do |url|
+  team_data = extract_team_data(url)
+  team_name = team_data[:team_name]
+  games = team_data[:games]
 
-url = 'https://www.fpb.pt/equipa/equipa_52834/'
-games = extract_games(url)
+  calendar_id = find_or_create_calendar(service, url, team_name)
+  ensure_calendar_has_team_name(service, calendar_id, team_name)
 
-add_to_google_calendar(service, calendar_id, games)
+  share_calendar_with_emails(service, calendar_id)
+  add_to_google_calendar(service, calendar_id, games)
+end
 
 # games.each do |game|
 #   puts "Date: #{game[:date]}"
