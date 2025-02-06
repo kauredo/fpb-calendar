@@ -1,6 +1,7 @@
 require 'sinatra'
-require 'sinatra/json'
-require_relative 'games' # Assuming your Ruby file is named games.rb
+require 'rack/attack'
+require_relative 'fpb_calendar'
+use Rack::Attack
 
 # Homepage with the form
 get '/' do

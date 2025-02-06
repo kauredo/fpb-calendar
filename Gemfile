@@ -4,8 +4,8 @@ source 'https://rubygems.org'
 gem 'googleauth'
 gem 'google-api-client'
 gem 'nokogiri'
+gem 'rack-attack'
 gem 'sinatra'
-gem 'sinatra-contrib' # For JSON responses and more
 
 group :development do
   gem 'pry' # For debugging
