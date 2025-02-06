@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendário FPB</title>
+    <link rel="stylesheet" href="/stylesheets/style.css">
   </head>
   <body>
     <h1>Calendário FPB</h1>
-    <form action="/invite" method="POST">
+    <form id="invite-form" class="container" action="/invite" method="POST">
       <label for="email">Email:</label>
       <input type="email" name="email" id="email" required>
       <br>
@@ -16,5 +17,9 @@
       <br>
       <button type="submit">Enviar Convite</button>
     </form>
+    <div id="loading-screen">
+      <div class="spinner"></div>
+    </div>
+    <script src="/javascripts/main.js"></script>
   </body>
 </html>
