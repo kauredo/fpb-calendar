@@ -4,6 +4,7 @@ source 'https://rubygems.org'
 gem 'googleauth'
 gem 'google-api-client'
 gem 'nokogiri'
+gem 'puma'
 gem 'rack-attack'
 gem 'sinatra'
 

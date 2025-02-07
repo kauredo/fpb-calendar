@@ -3,6 +3,9 @@ require 'rack/attack'
 require_relative 'fpb_calendar'
 use Rack::Attack
 
+set :port, ENV['PORT'] || 4567
+set :bind, '0.0.0.0'
+
 # Homepage with the form
 get '/' do
   erb :index

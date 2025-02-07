@@ -76,6 +76,7 @@ GEM
     mutex_m (0.3.0)
     net-http (0.6.0)
       uri
+    nio4r (2.7.4)
     nokogiri (1.13.10)
       mini_portile2 (~> 2.8.0)
       racc (~> 1.4)
@@ -84,6 +85,8 @@ GEM
       coderay (~> 1.1)
       method_source (~> 1.0)
     public_suffix (6.0.1)
+    puma (6.6.0)
+      nio4r (~> 2.0)
     racc (1.8.1)
     rack (3.1.9)
     rack-attack (6.7.0)
@@ -131,6 +134,7 @@ DEPENDENCIES
   googleauth
   nokogiri
   pry
+  puma
   rack-attack
   sinatra
 
