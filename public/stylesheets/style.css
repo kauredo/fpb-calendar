@@ -1,8 +1,19 @@
+* {
+  box-sizing: border-box;
+  transition: all 0.3s;
+}
+
 body {
   font-family: Arial, sans-serif;
+  font-family: "Roboto", serif;
   margin: 0;
-  padding: 0;
+  padding: 0 10px;
   background-color: #f4f4f4;
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
 }
 
 h1 {
@@ -12,7 +23,7 @@ h1 {
 
 form,
 .container {
-  max-width: 500px;
+  max-width: 600px;
   margin: 20px auto;
   padding: 20px;
   background-color: white;
@@ -96,19 +107,22 @@ button:hover {
 }
 
 .dropdown.open .dropdown-content {
-  display: block;
+  max-height: 600px;
+  padding: 15px;
 }
 
 .dropdown-content {
-  display: none;
-  max-width: 540px;
+  max-height: 0;
+  overflow: hidden;
+  max-width: 600px;
   background-color: transparent;
   border-left: 4px solid #009d3d;
-  padding: 15px;
+  padding: 0 15px;
   margin: 20px auto;
   font-size: 0.9em;
   color: #333;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  line-height: 1.25;
 }
 
 .dropdown-content p {
@@ -125,15 +139,13 @@ button:hover {
 }
 
 .footer {
-  position: fixed;
-  bottom: 0;
   width: 100%;
 
   text-align: center;
   font-size: 0.8em;
   color: #555;
   padding: 10px;
-  margin-top: 30px;
+  margin-top: 15px;
   border-top: 1px solid #ccc;
 }
 

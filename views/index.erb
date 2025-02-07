@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendário FPB</title>
     <meta name="description" content="Aplicação para adicionar jogos de basquetebol da Federação Portuguesa de Basquetebol ao seu calendário pessoal.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="/stylesheets/style.css">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
@@ -13,29 +18,31 @@
     <link rel="manifest" href="/site.webmanifest">
   </head>
   <body>
-    <div id="loading-screen">
-      <div class="spinner"></div>
-    </div>
-    <h1>Calendário FPB</h1>
-    <form id="invite-form" class="container" action="/invite" method="POST">
-      <label for="email">Email:</label>
-      <input type="email" name="email" id="email" required>
-      <br>
-      <label for="team_url">URL de equipa:</label>
-      <input type="url" name="team_url" id="team_url" required placeholder="https://www.fpb.pt/equipa/equipa_XXXXX">
-      <br>
-      <button type="submit">Enviar Convite</button>
-    </form>
-    <div class="dropdown">
-      <p class="dropdown-toggle">Modo de utilização</p>
-      <div class="dropdown-content">
-        <p>Este é um projeto pessoal que permite a subscrição de jogos de basquetebol da <a href="https://www.fpb.pt/" target="_blank">Federação Portuguesa de Basquetebol</a> no seu calendário pessoal.</p>
-        <p>Para começar, insira o seu email e o URL da equipa que deseja seguir, no formato <code>https://www.fpb.pt/equipa/equipa_XXXXX</code>.</p>
-        <p>Irá receber um email (com título <strong>invite</strong>) com um link para adicionar os jogos ao seu calendário.</p>
-        <p>Clique no link <strong>Add this calendar</strong>, será redirecionado para a página de subscrição do Google Calendar.</p>
-        <p>Escolha a sua conta Google e clique em <strong>Adicionar</strong>. Parabéns, os jogos da equipa escolhida foram adicionados ao seu calendário!</p>
+    <main>
+      <div id="loading-screen">
+        <div class="spinner"></div>
       </div>
-    </div>
+      <h1>Calendário FPB</h1>
+      <form id="invite-form" class="container" action="/invite" method="POST">
+        <label for="email">Email:</label>
+        <input type="email" name="email" id="email" required>
+        <br>
+        <label for="team_url">URL de equipa:</label>
+        <input type="url" name="team_url" id="team_url" required placeholder="https://www.fpb.pt/equipa/equipa_XXXXX">
+        <br>
+        <button type="submit">Enviar Convite</button>
+      </form>
+      <div class="dropdown">
+        <p class="dropdown-toggle">Modo de utilização</p>
+        <div class="dropdown-content">
+          <p>Este é um projeto pessoal que permite a subscrição de jogos de basquetebol da <a href="https://www.fpb.pt/" target="_blank">Federação Portuguesa de Basquetebol</a> no seu calendário pessoal.</p>
+          <p>Para começar, insira o seu email e o URL da equipa que deseja seguir, no formato <code>https://www.fpb.pt/equipa/equipa_XXXXX</code>.</p>
+          <p>Irá receber um email (com título <strong>invite</strong>) com um link para adicionar os jogos ao seu calendário.</p>
+          <p>Clique no link <strong>Add this calendar</strong>, será redirecionado para a página de subscrição do Google Calendar.</p>
+          <p>Escolha a sua conta Google e clique em <strong>Adicionar</strong>. Parabéns, os jogos da equipa escolhida foram adicionados ao seu calendário!</p>
+        </div>
+      </div>
+    </main>
     <footer class="footer">
       <p>Este projeto não é afiliado com <a href="https://www.fpb.pt/" target="_blank">Federação Portuguesa de Basquetebol</a> ou qualquer uma das suas entidades. É um projeto pessoal sem fins lucrativos.</p>
       <p>Qualquer problema ou sugestão, por favor contacte-me <a href="mailto:vasco.kf@gmail.com">por email</a>. Obrigado.</p>
