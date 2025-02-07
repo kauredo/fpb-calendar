@@ -16,6 +16,16 @@ primary_region = 'arn'
   min_machines_running = 0
   processes = ['app']
 
+  [[http_service.checks]]
+    interval = "1h"     # Run health checks every 1 hour
+    timeout = "5s"       # Fail if no response in 2 seconds
+    grace_period = "60s" # Wait 10 seconds after app starts before checking
+    method = "GET"       # Use GET HTTP method
+    path = "/health"     # Health check endpoint
+    protocol = "http"    # Use HTTP
+    headers = { Host = "fpb-calendar.fly.dev" } # Optional: Add Host header
+    tls_skip_verify = false
+
 [[vm]]
   memory = '1gb'
   cpu_kind = 'shared'

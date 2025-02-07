@@ -5,7 +5,8 @@ use Rack::Attack
 
 set :port, ENV['PORT'] || 4567
 set :bind, '0.0.0.0'
-set :hosts, ['fpb-calendar.fly.dev', 'localhost']
+set :hosts, ['fpb-calendar.fly.dev', 'localhost'] # Sinatra will enforce allowed hosts
+set :protection, :except => :host # Disable Rack::Protection HostAuthorization
 
 # Homepage with the form
 get '/' do
