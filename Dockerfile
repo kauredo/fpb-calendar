@@ -1,25 +1,28 @@
 ARG RUBY_VERSION=3.2.2
 FROM ruby:$RUBY_VERSION-slim as base
 
-# Rack app lives here
 WORKDIR /app
 
 # Update gems and bundler
 RUN gem update --system --no-document && \
     gem install -N bundler
 
-
 # Throw-away build stage to reduce size of final image
 FROM base as build
 
 # Install packages needed to build gems
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential
+    apt-get install --no-install-recommends -y \
+    build-essential \
+    libxml2-dev \
+    libxslt-dev \
+    libssl-dev \
+    curl && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install application gems
 COPY Gemfile* .
 RUN bundle install
-
 
 # Final stage for app image
 FROM base

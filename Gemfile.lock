@@ -98,6 +98,8 @@ GEM
     rack-session (2.1.0)
       base64 (>= 0.1.0)
       rack (>= 3.0.0)
+    rackup (2.2.1)
+      rack (>= 3)
     representable (3.2.0)
       declarative (< 0.1.0)
       trailblazer-option (>= 0.1.1, < 0.2.0)
@@ -136,6 +138,7 @@ DEPENDENCIES
   pry
   puma
   rack-attack
+  rackup
   sinatra
 
 BUNDLED WITH

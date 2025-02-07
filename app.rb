@@ -11,6 +11,10 @@ get '/' do
   erb :index
 end
 
+get '/health' do
+  'OK'
+end
+
 # Handle form submissions
 post '/invite' do
   email = params[:email]
