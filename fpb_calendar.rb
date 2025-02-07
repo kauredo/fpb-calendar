@@ -6,9 +6,18 @@ require 'nokogiri'
 require 'date'
 require 'googleauth'
 require 'google/apis/calendar_v3'
+require 'dotenv'
 require 'pry'
+require 'base64'
 
-# Map Portuguese month abbreviations to English month names
+Dotenv.load
+encoded_credentials = ENV['GOOGLE_CALENDAR_CREDENTIALS']
+file_path = './temp_google_credentials.json'
+File.write(file_path, Base64.decode64(encoded_credentials))
+
+KEY_FILE_PATH = file_path
+CALENDAR_MAPPING_FILE = 'calendars.json'.freeze
+EMAILS_FILE = 'emails.txt'.freeze
 MONTH_MAP = {
   'JAN' => 'Jan',
   'FEV' => 'Feb',
@@ -23,10 +32,6 @@ MONTH_MAP = {
   'NOV' => 'Nov',
   'DEZ' => 'Dec'
 }
-
-KEY_FILE_PATH = './simecq-calendar-0801232616b8.json'.freeze
-CALENDAR_MAPPING_FILE = 'calendars.json'.freeze
-EMAILS_FILE = 'emails.txt'.freeze
 
 class FpbCalendar
   attr_reader :url, :team_data, :service
@@ -159,7 +164,6 @@ class FpbCalendar
 
   # Create a new Google Calendar
   def create_calendar
-    binding.pry
     calendar = Google::Apis::CalendarV3::Calendar.new(
       summary: team_data[:team_name],
       time_zone: 'Europe/Lisbon'
@@ -244,5 +248,9 @@ class FpbCalendar
       service.insert_event(calendar_id, event)
       puts "Added event: #{event.summary}"
     end
+  end
+
+  def cleanup
+    File.delete(KEY_FILE_PATH) if File.exist?(KEY_FILE_PATH)
   end
 end

@@ -1,6 +1,7 @@
 source 'https://rubygems.org'
 
 # Gemfile
+gem 'dotenv'
 gem 'googleauth'
 gem 'google-api-client'
 gem 'nokogiri'

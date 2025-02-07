@@ -18,4 +18,7 @@ calendar_urls.each do |url|
 
   # Add games to the calendar
   calendar.add_games_to_calendar(calendar_id)
+
+  # Delete the temp files
+  calendar.cleanup
 end

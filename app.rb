@@ -44,6 +44,8 @@ post '/invite' do
 
     @team_name = calendar.team_data[:team_name]
 
+    calendar.cleanup
+
     status 200
     erb :success
   rescue StandardError => e
