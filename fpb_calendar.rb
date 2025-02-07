@@ -11,11 +11,7 @@ require 'pry'
 require 'base64'
 
 Dotenv.load
-encoded_credentials = ENV['GOOGLE_CALENDAR_CREDENTIALS']
-file_path = './temp_google_credentials.json'
-File.write(file_path, Base64.decode64(encoded_credentials))
 
-KEY_FILE_PATH = file_path
 CALENDAR_MAPPING_FILE = 'calendars.json'.freeze
 EMAILS_FILE = 'emails.txt'.freeze
 MONTH_MAP = {
@@ -34,12 +30,24 @@ MONTH_MAP = {
 }
 
 class FpbCalendar
-  attr_reader :url, :team_data, :service
+  attr_reader :url, :team_data, :service, :file_path
 
   def initialize(url)
     @url = url.sub('https://www.fpb.pt/equipa/', '').sub('/', '').prepend('https://www.fpb.pt/equipa/')
     @team_data = extract_team_data
+    @file_path = './tmp/temp_google_credentials.json'
+    initialize_credentials_file
     @service = initialize_google_calendar_service
+  end
+
+  def initialize_credentials_file
+    encoded_credentials = ENV['GOOGLE_CALENDAR_CREDENTIALS']
+    File.write(file_path, Base64.decode64(encoded_credentials))
+  end
+
+  def cleanup
+    # Delete the temporary credentials file after use
+    File.delete(file_path) if File.exist?(file_path)
   end
 
   # Extract team data from the FPB website
@@ -130,7 +138,7 @@ class FpbCalendar
   def initialize_google_calendar_service
     scopes = ['https://www.googleapis.com/auth/calendar']
     credentials = Google::Auth::ServiceAccountCredentials.make_creds(
-      json_key_io: File.open(KEY_FILE_PATH),
+      json_key_io: File.open(file_path),
       scope: scopes
     )
 
@@ -248,9 +256,5 @@ class FpbCalendar
       service.insert_event(calendar_id, event)
       puts "Added event: #{event.summary}"
     end
-  end
-
-  def cleanup
-    File.delete(KEY_FILE_PATH) if File.exist?(KEY_FILE_PATH)
   end
 end

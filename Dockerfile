@@ -31,6 +31,10 @@ FROM base
 RUN useradd ruby --home /app --shell /bin/bash
 USER ruby:ruby
 
+# Create the tmp directory and set permissions for writing
+RUN mkdir -p /app/tmp && \
+    chown -R ruby:ruby /app/tmp
+
 # Copy built artifacts: gems, application
 COPY --from=build /usr/local/bundle /usr/local/bundle
 COPY --from=build --chown=ruby:ruby /app /app
