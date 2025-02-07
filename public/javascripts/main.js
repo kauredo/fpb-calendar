@@ -8,4 +8,11 @@ document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("loading-screen").style.display = "flex";
     });
   }
+
+  document
+    .querySelector(".dropdown-toggle")
+    .addEventListener("click", function () {
+      var dropdown = this.parentElement;
+      dropdown.classList.toggle("open");
+    });
 });

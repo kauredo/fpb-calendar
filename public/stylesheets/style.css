@@ -71,8 +71,37 @@ button:hover {
   }
 }
 
-.note {
-  max-width: 500px;
+/* Estilo do botão do dropdown */
+.dropdown {
+  margin: 20px auto;
+  max-width: 540px;
+}
+
+.dropdown-toggle {
+  white-space: nowrap;
+  cursor: pointer;
+  width: min-content;
+  text-decoration: underline;
+  color: #555;
+}
+
+.dropdown-toggle::after {
+  content: "\2193";
+  margin-left: 5px;
+  text-decoration: none;
+}
+
+.dropdown.open .dropdown-toggle::after {
+  content: "\2191";
+}
+
+.dropdown.open .dropdown-content {
+  display: block;
+}
+
+.dropdown-content {
+  display: none;
+  max-width: 540px;
   background-color: transparent;
   border-left: 4px solid #009d3d;
   padding: 15px;
@@ -82,16 +111,16 @@ button:hover {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.note p {
+.dropdown-content p {
   margin: 5px 0;
 }
 
-.note a {
+.dropdown-content a {
   color: #009d3d;
   text-decoration: none;
 }
 
-.note a:hover {
+.dropdown-content a:hover {
   text-decoration: underline;
 }
 

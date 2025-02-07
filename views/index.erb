@@ -8,12 +8,10 @@
     <link rel="stylesheet" href="/stylesheets/style.css">
   </head>
   <body>
-    <h1>Calendário FPB</h1>
-    <div class="note">
-      <p>Este é um projeto pessoal que permite a subscrição de jogos de basquetebol da <a href="https://www.fpb.pt/" target="_blank">Federação Portuguesa de Basquetebol</a> no seu calendário pessoal.</p>
-      <p>Para começar, insira o seu email e o URL da equipa que deseja seguir, no formato <code>https://www.fpb.pt/equipa/equipa_XXXXX</code>.</p>
-      <p>Irá receber um email com um link para adicionar os jogos ao seu calendário.</p>
+    <div id="loading-screen">
+      <div class="spinner"></div>
     </div>
+    <h1>Calendário FPB</h1>
     <form id="invite-form" class="container" action="/invite" method="POST">
       <label for="email">Email:</label>
       <input type="email" name="email" id="email" required>
@@ -23,8 +21,13 @@
       <br>
       <button type="submit">Enviar Convite</button>
     </form>
-    <div id="loading-screen">
-      <div class="spinner"></div>
+    <div class="dropdown">
+      <p class="dropdown-toggle">Modo de utilização</p>
+      <div class="dropdown-content">
+        <p>Este é um projeto pessoal que permite a subscrição de jogos de basquetebol da <a href="https://www.fpb.pt/" target="_blank">Federação Portuguesa de Basquetebol</a> no seu calendário pessoal.</p>
+        <p>Para começar, insira o seu email e o URL da equipa que deseja seguir, no formato <code>https://www.fpb.pt/equipa/equipa_XXXXX</code>.</p>
+        <p>Irá receber um email com um link para adicionar os jogos ao seu calendário.</p>
+      </div>
     </div>
     <footer class="footer">
       <p>Nota: este projeto não é afiliado com <a href="https://www.fpb.pt/" target="_blank">Federação Portuguesa de Basquetebol</a> ou qualquer uma das suas entidades. É apenas um projeto pessoal.</p>
