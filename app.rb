@@ -5,6 +5,7 @@ use Rack::Attack
 
 set :port, ENV['PORT'] || 4567
 set :bind, '0.0.0.0'
+set :hosts, ['fpb-calendar.fly.dev', 'localhost']
 
 # Homepage with the form
 get '/' do
