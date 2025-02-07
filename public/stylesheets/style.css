@@ -70,3 +70,49 @@ button:hover {
     transform: rotate(360deg);
   }
 }
+
+.note {
+  max-width: 500px;
+  background-color: transparent;
+  border-left: 4px solid #009d3d;
+  padding: 15px;
+  margin: 20px auto;
+  font-size: 0.9em;
+  color: #333;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.note p {
+  margin: 5px 0;
+}
+
+.note a {
+  color: #009d3d;
+  text-decoration: none;
+}
+
+.note a:hover {
+  text-decoration: underline;
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+
+  text-align: center;
+  font-size: 0.8em;
+  color: #555;
+  padding: 10px;
+  margin-top: 30px;
+  border-top: 1px solid #ccc;
+}
+
+.footer a {
+  color: #009d3d;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
