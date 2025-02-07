@@ -4,3 +4,4 @@ fly.toml
 .env
 tmp/*.json
 encoded_google_credentials.txt
+.DS_Store
