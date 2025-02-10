@@ -17,6 +17,31 @@ get '/health' do
   'OK'
 end
 
+# robots.txt for SEO
+get '/robots.txt' do
+  content_type 'text/plain'
+  """
+  User-agent: *
+  Disallow: /health
+  Sitemap: https://fpb-calendar.fly.dev/sitemap.xml
+  """
+end
+
+# Dynamic sitemap generation
+get '/sitemap.xml' do
+  content_type 'application/xml'
+  urls = [
+    "https://fpb-calendar.fly.dev/",
+  ]
+
+  <<~XML
+    <?xml version="1.0" encoding="UTF-8"?>
+    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+      #{urls.map { |url| "<url><loc>#{url}</loc><lastmod>#{Time.now.utc.iso8601}</lastmod></url>" }.join}\n
+    </urlset>
+  XML
+end
+
 # Handle form submissions
 post '/invite' do
   email = params[:email]

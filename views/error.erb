@@ -17,12 +17,14 @@
     <link rel="manifest" href="/site.webmanifest">
   </head>
   <body>
-    <h1>Erro</h1>
-    <div class="container">
-      <p>A aplicação encontrou um erro: <%= @error_message %></p>
-      <p>Por favor corrija e tente novamente.</p>
-      <button onclick="window.location.href='/'">Voltar</button>
-    </div>
+    <main>
+      <h1>Erro</h1>
+      <div class="container">
+        <p>A aplicação encontrou um erro: <%= @error_message %></p>
+        <p>Por favor corrige e tente novamente.</p>
+        <button onclick="window.location.href='/'">Voltar</button>
+      </div>
+    </main>
     <footer class="footer">
       <p>Nota: este projeto não é afiliado com <a href="https://www.fpb.pt/" target="_blank">Federação Portuguesa de Basquetebol</a> ou qualquer uma das suas entidades. É apenas um projeto pessoal.</p>
       <p>Qualquer problema ou sugestão, por favor contacte-me <a href="mailto:vasco.kf@gmail.com">por email</a>. Obrigado.</p>
