@@ -121,13 +121,16 @@ class FpbCalendar
       location_element = game_wrapper.at_css('div.location-wrapper')
       competition = location_element&.css('div.competition')&.text&.strip
       location = location_element&.text&.strip.split("\r\n").map(&:strip).reject(&:empty?) - [competition]
+      # the link is on the parent element
+      link = game_wrapper.parent['href']
 
       games << {
         date: date,
         time: time_text,
         teams: teams,
         location: location.first,
-        competition: competition
+        competition: competition,
+        link: link
       }
     end
 
@@ -229,6 +232,10 @@ class FpbCalendar
       start_time = Time.parse("#{game[:date]} #{game[:time]}")
       end_time = start_time + 9000 # Adjust duration as needed
       event_summary = "#{game[:teams].first} vs #{game[:teams].last}"
+      event_description = <<~DESC
+        Competição: #{game[:competition]}
+        Link: https://www.fpb.pt#{game[:link]}
+      DESC
 
       # Query for existing events in a time window around start_time
       existing_events = service.list_events(calendar_id,
@@ -239,15 +246,23 @@ class FpbCalendar
         q: event_summary
       ).items
 
-      # Skip adding if an event with the same summary already exists
-      if existing_events.any? { |event| event.summary == event_summary }
-        puts "Event already exists: #{event_summary}"
-        next
+      existing_event = existing_events.find { |event| event.summary == event_summary }
+
+      if existing_event
+        if existing_event.description == event_description
+          puts "Event already exists with the same description: #{event_summary}"
+          next
+        else
+          puts "Updating the event description for: #{event_summary}"
+          existing_event.description = event_description
+          service.update_event(calendar_id, existing_event.id, existing_event)
+          next
+        end
       end
 
       event = Google::Apis::CalendarV3::Event.new(
         summary: event_summary,
-        description: "#{game[:teams].join(', ')} => #{game[:competition]}",
+        description: event_description,
         location: game[:location],
         start: Google::Apis::CalendarV3::EventDateTime.new(date_time: start_time.iso8601, time_zone: 'Europe/Lisbon'),
         end: Google::Apis::CalendarV3::EventDateTime.new(date_time: end_time.iso8601, time_zone: 'Europe/Lisbon'),
