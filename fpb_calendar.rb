@@ -273,6 +273,44 @@ class FpbCalendar
     end
   end
 
+  def remove_stale_events(calendar_id)
+    # Fetch all events from today onwards
+    time_min = Time.now.utc.iso8601
+    events = service.list_events(
+      calendar_id,
+      single_events: true,
+      order_by: 'startTime',
+      time_min: time_min
+    ).items
+
+    # Extract current games from team_data
+    current_games = team_data[:games].map do |game|
+      {
+        summary: "#{game[:teams].first} vs #{game[:teams].last}",
+        date_time: Time.parse("#{game[:date]} #{game[:time]}").iso8601
+      }
+    end
+
+    # Identify events to remove
+    events_to_remove = events.reject do |event|
+      current_games.any? do |game|
+        event.summary == game[:summary] && event.start.date_time.to_s == game[:date_time]
+      end
+    end
+
+    if events_to_remove.empty?
+      puts "No stale events to remove"
+    else
+      puts "Found #{events_to_remove.size} stale events to remove"
+      # Delete stale events
+      events_to_remove.each do |event|
+        service.delete_event(calendar_id, event.id)
+        puts "Removed stale event: #{event.summary}"
+      end
+    end
+  end
+
+
   def calendar_link(calendar_id)
     "https://calendar.google.com/calendar/embed?src=#{calendar_id}"
   end
