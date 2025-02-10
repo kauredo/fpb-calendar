@@ -152,6 +152,8 @@ class FpbCalendar
 
   # Find or create a calendar for the team
   def find_or_create_calendar
+    puts "-" * 20
+    puts "Processing team: #{team_name}"
     calendars = load_calendar_mappings
 
     if calendars.key?(url)
@@ -219,12 +221,20 @@ class FpbCalendar
         role: role
       )
       service.insert_acl(calendar_id, acl_rule)
-      puts "Shared calendar #{calendar_id} with #{email}"
+      puts "Shared calendar #{team_name} with #{email}"
     else
-      puts "Calendar #{calendar_id} is already shared with #{email}"
+      puts "Calendar #{team_name} is already shared with #{email}"
     end
   end
 
+  def list_acls(calendar_id)
+    acl_list = service.list_acls(calendar_id).items
+    acl_list_without_owners = acl_list.select { |acl| acl.role != 'owner' }
+    puts "Listing ACLs for calendar: #{team_name}. Total ACLs: #{acl_list_without_owners.size}"
+    acl_list_without_owners.each do |acl|
+      puts "#{acl.scope.value} - #{acl.role}"
+    end
+  end
 
   # Add games to the Google Calendar
   def add_games_to_calendar(calendar_id)
@@ -310,8 +320,28 @@ class FpbCalendar
     end
   end
 
-
   def calendar_link(calendar_id)
     "https://calendar.google.com/calendar/embed?src=#{calendar_id}"
+  end
+
+  def team_name
+    team_data[:team_name]
+  end
+
+  def self.list_all_calendars
+    tmp = new('https://www.fpb.pt/equipa/')
+    service = tmp.service
+    calendars = service.list_calendar_lists.items
+    puts "There are #{calendars.size} calendars:"
+    calendars.each do |calendar|
+      puts "#{calendar.summary}"
+    end
+    puts "-" * 20
+
+    calendars.each do |calendar|
+      puts "#{calendar.summary}:"
+      tmp.list_acls(calendar.id)
+      puts
+    end
   end
 end
