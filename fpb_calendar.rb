@@ -272,4 +272,8 @@ class FpbCalendar
       puts "Added event: #{event.summary}"
     end
   end
+
+  def calendar_link(calendar_id)
+    "https://calendar.google.com/calendar/embed?src=#{calendar_id}"
+  end
 end

@@ -43,6 +43,7 @@ post '/invite' do
     calendar.add_games_to_calendar(calendar_id)
 
     @team_name = calendar.team_data[:team_name]
+    @calendar_link = calendar.calendar_link(calendar_id)
 
     calendar.cleanup
 
