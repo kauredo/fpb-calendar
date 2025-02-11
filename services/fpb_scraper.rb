@@ -71,7 +71,7 @@ class FpbScraper
 
   def extract_team_info(doc)
     age_group, gender = get_age_and_gender(doc)
-    { age_group: age_group, gender: gender}
+    { age_group: age_group, gender: gender, url: url }
   end
 
   def get_age_and_gender(doc)
@@ -102,13 +102,15 @@ class FpbScraper
       games.concat(parse_game_details(doc, day_wrapper, date))
     end
 
-    games
-    # I want to group by link and keep the game that has result, or the first game if none has result
+    # Group by link and keep the game that has result, or the first game if none has result
     tmp_games = games.group_by { |game| game[:link] }.map do |_, inner_games|
       inner_games.find { |game| game[:result] } || inner_games.first
     end
 
-    binding.pry
+    seasons = tmp_games.map { |game| game[:date].year }.uniq.sort
+    season = "#{seasons.first}-#{seasons.last}"
+    tmp_games.each { |game| game[:season] = season }
+
     tmp_games
   end
 

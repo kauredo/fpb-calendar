@@ -152,7 +152,7 @@ class BulkFpbScraper
 
     # Save team info
     CSV.open("#{OUTPUT_DIR}/teams.csv", 'a+', col_sep: ';') do |csv|
-      csv << [id, team_data[:team_name], team_data[:team_info][:age_group], team_data[:team_info][:gender]]
+      csv << [id, team_data[:team_name], team_data[:team_info][:age_group], team_data[:team_info][:gender], team_data[:games].first[:season], team_data[:team_info][:url]]
     end
 
     # Save games
@@ -168,6 +168,7 @@ class BulkFpbScraper
           game[:result],
           game[:location],
           game[:competition],
+          game[:season],
           game[:link]
         ]
       end
