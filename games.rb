@@ -6,6 +6,7 @@ calendar_mappings = File.exist?(CALENDAR_MAPPING_FILE) ? JSON.parse(File.read(CA
 return unless calendar_mappings
 
 calendar_urls = calendar_mappings.keys
+binding.pry
 calendar_urls.each do |url|
   # Initialize the FpbCalendar instance
   calendar = FpbCalendar.new(url)

@@ -1,40 +1,23 @@
-require 'uri'
-require 'net/http'
-require 'openssl'
-require 'json'
-require 'nokogiri'
-require 'date'
+# fpb_calendar.rb
+require_relative 'services/fpb_scraper'
 require 'googleauth'
 require 'google/apis/calendar_v3'
 require 'dotenv'
-require 'pry'
+require 'json'
 require 'base64'
 
 Dotenv.load
 
 CALENDAR_MAPPING_FILE = 'calendars.json'.freeze
 EMAILS_FILE = 'emails.txt'.freeze
-MONTH_MAP = {
-  'JAN' => 'Jan',
-  'FEV' => 'Feb',
-  'MAR' => 'Mar',
-  'ABR' => 'Apr',
-  'MAI' => 'May',
-  'JUN' => 'Jun',
-  'JUL' => 'Jul',
-  'AGO' => 'Aug',
-  'SET' => 'Sep',
-  'OUT' => 'Oct',
-  'NOV' => 'Nov',
-  'DEZ' => 'Dec'
-}
 
 class FpbCalendar
   attr_reader :url, :team_data, :service, :file_path
 
   def initialize(url)
     @url = url.sub('https://www.fpb.pt/equipa/', '').sub('/', '').prepend('https://www.fpb.pt/equipa/')
-    @team_data = extract_team_data
+    scraper = FpbScraper.new(@url)
+    @team_data = scraper.fetch_team_data
     @file_path = './tmp/temp_google_credentials.json'
     initialize_credentials_file
     @service = initialize_google_calendar_service
@@ -46,98 +29,9 @@ class FpbCalendar
   end
 
   def cleanup
-    # Delete the temporary credentials file after use
     File.delete(file_path) if File.exist?(file_path)
   end
 
-  # Extract team data from the FPB website
-  def extract_team_data
-    uri = URI.parse(url)
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = true
-    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-
-    max_redirects = 5
-    redirects = 0
-
-    while redirects < max_redirects
-      request = Net::HTTP::Get.new(uri.request_uri)
-      response = http.request(request)
-
-      # If it's a redirect, follow it
-      if response.code.to_i == 301 || response.code.to_i == 302
-        uri = URI.parse(response['Location'])
-        redirects += 1
-      else
-        break # No redirect, or we've reached the final response
-      end
-    end
-
-    if redirects >= max_redirects
-      raise "Too many redirects for URL: #{url}"
-    end
-
-    # Process the final response
-    html = response.body
-    doc = Nokogiri::HTML(html)
-
-    team_name = doc.css('div.team-nome').text.strip
-    games = parse_games(doc)
-
-    { team_name: team_name, games: games }
-  end
-
-  # Parse games from the team page
-  def parse_games(doc)
-    games = []
-    day_wrappers = doc.css('div.day-wrapper')
-
-    day_wrappers.each do |day_wrapper|
-      date_element = day_wrapper.at_css('h3.date')
-      next unless date_element
-
-      date_text = date_element.text.strip
-      next if date_text.to_i.zero?
-
-      day, month_abbr, year = date_text.split(/\s+/)
-      english_month_abbr = MONTH_MAP[month_abbr.upcase] || month_abbr
-      date = Date.strptime("#{english_month_abbr} #{day}, #{year}", "%b %d, %Y")
-      next if date < Date.today
-
-      games.concat(parse_game_details(day_wrapper, date))
-    end
-
-    games
-  end
-
-  # Parse details for individual games
-  def parse_game_details(day_wrapper, date)
-    games = []
-    game_wrappers = day_wrapper.css('div.game-wrapper')
-
-    game_wrappers.each do |game_wrapper|
-      time_text = game_wrapper.at_css('div.hour')&.text&.strip || ''
-      teams = game_wrapper.css('span.fullName').map(&:text).map(&:strip)
-      location_element = game_wrapper.at_css('div.location-wrapper')
-      competition = location_element&.css('div.competition')&.text&.strip
-      location = location_element&.text&.strip.split("\r\n").map(&:strip).reject(&:empty?) - [competition]
-      # the link is on the parent element
-      link = game_wrapper.parent['href']
-
-      games << {
-        date: date,
-        time: time_text,
-        teams: teams,
-        location: location.first,
-        competition: competition,
-        link: link
-      }
-    end
-
-    games
-  end
-
-  # Initialize the Google Calendar API service
   def initialize_google_calendar_service
     scopes = ['https://www.googleapis.com/auth/calendar']
     credentials = Google::Auth::ServiceAccountCredentials.make_creds(
@@ -150,7 +44,6 @@ class FpbCalendar
     service
   end
 
-  # Find or create a calendar for the team
   def find_or_create_calendar
     puts "-" * 20
     puts "Processing team: #{team_name}"
@@ -175,7 +68,6 @@ class FpbCalendar
     calendar_id
   end
 
-  # Create a new Google Calendar
   def create_calendar
     calendar = Google::Apis::CalendarV3::Calendar.new(
       summary: team_data[:team_name],
@@ -186,18 +78,15 @@ class FpbCalendar
     result.id
   end
 
-  # Load calendar mappings from the JSON file
   def load_calendar_mappings
     File.exist?(CALENDAR_MAPPING_FILE) ? JSON.parse(File.read(CALENDAR_MAPPING_FILE)) : {}
   end
 
-  # Update calendar mappings in the JSON file
   def update_calendar_mappings(calendars, calendar_id)
     calendars[url] = calendar_id
     File.write(CALENDAR_MAPPING_FILE, JSON.pretty_generate(calendars))
   end
 
-  # Share the calendar with email addresses
   def share_calendar_with_emails(calendar_id)
     emails = File.readlines(EMAILS_FILE).map(&:strip)
 
@@ -207,10 +96,8 @@ class FpbCalendar
   end
 
   def share_calendar_with_email(calendar_id, email, role: 'reader')
-    # List the existing ACL rules for the calendar
     acl_list = service.list_acls(calendar_id).items
 
-    # Check if the calendar is already shared with this email
     already_shared = acl_list.any? do |acl|
       acl.scope.type == 'user' && acl.scope.value == email
     end
@@ -236,23 +123,21 @@ class FpbCalendar
     end
   end
 
-  # Add games to the Google Calendar
   def add_games_to_calendar(calendar_id)
     team_data[:games].each do |game|
       start_time = Time.parse("#{game[:date]} #{game[:time]}")
-      end_time = start_time + 9000 # Adjust duration as needed
+      end_time = start_time + 9000 # 2.5 hours in seconds
       event_summary = "#{game[:teams].first} vs #{game[:teams].last}"
       event_description = <<~DESC
         Competição: #{game[:competition]}
         Link: https://www.fpb.pt#{game[:link]}
       DESC
 
-      # Query for existing events in a time window around start_time
       existing_events = service.list_events(calendar_id,
         single_events: true,
         order_by: 'startTime',
         time_min: start_time.iso8601,
-        time_max: (start_time + 3600).iso8601,  # adjust time window as needed
+        time_max: (start_time + 3600).iso8601,
         q: event_summary
       ).items
 
@@ -284,7 +169,6 @@ class FpbCalendar
   end
 
   def remove_stale_events(calendar_id)
-    # Fetch all events from today onwards
     time_min = Time.now.utc.iso8601
     events = service.list_events(
       calendar_id,
@@ -293,7 +177,6 @@ class FpbCalendar
       time_min: time_min
     ).items
 
-    # Extract current games from team_data
     current_games = team_data[:games].map do |game|
       {
         summary: "#{game[:teams].first} vs #{game[:teams].last}",
@@ -301,7 +184,6 @@ class FpbCalendar
       }
     end
 
-    # Identify events to remove
     events_to_remove = events.reject do |event|
       current_games.any? do |game|
         event.summary == game[:summary] && event.start.date_time.to_s == game[:date_time]
@@ -312,7 +194,6 @@ class FpbCalendar
       puts "No stale events to remove"
     else
       puts "Found #{events_to_remove.size} stale events to remove"
-      # Delete stale events
       events_to_remove.each do |event|
         service.delete_event(calendar_id, event.id)
         puts "Removed stale event: #{event.summary}"
