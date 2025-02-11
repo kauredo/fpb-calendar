@@ -120,9 +120,10 @@ class BulkFpbScraper
       if result[:data][:team_name].empty?
         log("Empty team found for ID #{result[:id]}")
       else
-        @scraped_ids.add(result[:id])
         save_team_data(result[:id], result[:data])
       end
+
+      @scraped_ids.add(result[:id])
     end
 
     save_scraped_ids
