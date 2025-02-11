@@ -24,7 +24,7 @@ class BulkFpbScraper
   end
 
   def scrape_all
-    @logger.info("Starting bulk scrape from ID #{@start_id}" + (@end_id ? " to #{@end_id}" : ""))
+    log("Starting bulk scrape from ID #{@start_id}" + (@end_id ? " to #{@end_id}" : ""))
 
     current_id = @start_id
     empty_team_count = 0 # Counter for consecutive empty teams
@@ -32,33 +32,42 @@ class BulkFpbScraper
     loop do
       # Check if we've reached the end_id
       if @end_id && current_id > @end_id
-        @logger.info("Reached specified end ID: #{@end_id}")
+        log("Reached specified end ID: #{@end_id}")
         break
       end
 
       batch = generate_next_batch(current_id)
-      break if batch.empty?
-
-      results = process_batch(batch)
-
-      # Check results and update empty_team_count
-      last_results = results.sort_by { |r| r[:id] }.last(5)
-      if last_results.all? { |r| r[:success] && r[:data][:team_name].empty? }
-        empty_team_count += 1
-        @logger.info("Found #{empty_team_count} consecutive empty teams, might be at the end")
-        break if empty_team_count >= 5 && !@end_id # Only break for empty teams if no end_id specified
+      if batch.empty?
+        current_id += BATCH_SIZE
+        # log("No new IDs to process, might be at the end")
+        # break
       else
-        empty_team_count = 0
-      end
+        results = process_batch(batch)
 
-      current_id = batch.max + 1
+        # Check results and update empty_team_count
+        last_results = results.sort_by { |r| r[:id] }.last(5)
+        if last_results.all? { |r| r[:success] && r[:data][:team_name].empty? }
+          empty_team_count += 1
+          log("Found #{empty_team_count} consecutive empty teams, might be at the end")
+          break if empty_team_count >= 5 && !@end_id # Only break for empty teams if no end_id specified
+        else
+          empty_team_count = 0
+        end
+
+        current_id = batch.max + 1
+      end
     end
 
-    @logger.info("Scraping completed. Last processed ID: #{current_id - 1}")
+    log("Scraping completed. Last processed ID: #{current_id - 1}")
     generate_summary
   end
 
   private
+
+  def log(msg, level = :info)
+    @logger.send(level, msg)
+    puts msg
+  end
 
   def setup_directories
     FileUtils.mkdir_p(OUTPUT_DIR)
@@ -98,7 +107,7 @@ class BulkFpbScraper
   end
 
   def process_batch(batch)
-    @logger.info("Processing batch: IDs #{batch.first} to #{batch.last}")
+    log("Processing batch: IDs #{batch.first} to #{batch.last}")
 
     results = Parallel.map(batch, in_threads: 4) do |id|
       process_team(id)
@@ -109,7 +118,7 @@ class BulkFpbScraper
       next unless result && result[:success]
 
       if result[:data][:team_name].empty?
-        @logger.info("Empty team found for ID #{result[:id]}")
+        log("Empty team found for ID #{result[:id]}")
       else
         @scraped_ids.add(result[:id])
         save_team_data(result[:id], result[:data])
@@ -127,7 +136,7 @@ class BulkFpbScraper
     retries = 0
 
     begin
-      @logger.info("Scraping team ID: #{id}")
+      log("Scraping team ID: #{id}")
       scraper = FpbScraper.new(url)
       team_data = scraper.fetch_team_data(results: true)
 
@@ -137,11 +146,11 @@ class BulkFpbScraper
     rescue => e
       retries += 1
       if retries <= MAX_RETRIES
-        @logger.warn("Retry #{retries}/#{MAX_RETRIES} for team #{id}: #{e.message}")
+        log("Retry #{retries}/#{MAX_RETRIES} for team #{id}: #{e.message}", :warn)
         sleep(DELAY * retries)
         retry
       else
-        @logger.error("Failed to scrape team #{id} after #{MAX_RETRIES} retries: #{e.message}")
+        log("Failed to scrape team #{id} after #{MAX_RETRIES} retries: #{e.message}", :error)
         { success: false, id: id }
       end
     end
@@ -152,7 +161,13 @@ class BulkFpbScraper
 
     # Save team info
     CSV.open("#{OUTPUT_DIR}/teams.csv", 'a+', col_sep: ';') do |csv|
-      csv << [id, team_data[:team_name], team_data[:team_info][:age_group], team_data[:team_info][:gender], team_data[:games].first[:season], team_data[:team_info][:url]]
+      name = team_data[:team_name]
+      age_group = team_data[:team_info][:age_group]
+      gender = team_data[:team_info][:gender]
+      season = team_data[:games].first&.dig(:season)
+      url = team_data[:team_info][:url]
+
+      csv << [id, name, age_group, gender, season, url]
     end
 
     # Save games
@@ -184,6 +199,6 @@ class BulkFpbScraper
     }
 
     File.write("#{OUTPUT_DIR}/summary.json", JSON.pretty_generate(summary))
-    @logger.info("Summary generated. Total teams processed: #{summary[:total_teams_processed]}")
+    log("Summary generated. Total teams processed: #{summary[:total_teams_processed]}")
   end
 end
