@@ -5,3 +5,5 @@ fly.toml
 tmp/*.json
 encoded_google_credentials.txt
 .DS_Store
+log/*
+data/*

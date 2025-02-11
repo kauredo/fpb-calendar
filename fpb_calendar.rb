@@ -5,6 +5,7 @@ require 'google/apis/calendar_v3'
 require 'dotenv'
 require 'json'
 require 'base64'
+require 'pry'
 
 Dotenv.load
 
@@ -130,7 +131,7 @@ class FpbCalendar
       event_summary = "#{game[:teams].first} vs #{game[:teams].last}"
       event_description = <<~DESC
         Competição: #{game[:competition]}
-        Link: https://www.fpb.pt#{game[:link]}
+        Link: #{game[:link]}
       DESC
 
       existing_events = service.list_events(calendar_id,
