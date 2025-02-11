@@ -11,6 +11,7 @@ require 'pry'
 class BulkFpbScraper
   BATCH_SIZE = 50
   MAX_RETRIES = 3
+  MAX_EMPTY_IN_ROW = 20
   DELAY = 1 # seconds between requests
   BASE_URL = 'https://www.fpb.pt/equipa/equipa_'.freeze
   OUTPUT_DIR = 'data'.freeze
@@ -21,6 +22,7 @@ class BulkFpbScraper
     setup_directories
     setup_logger
     @scraped_ids = load_scraped_ids
+    @empty_ids = load_empty_ids
   end
 
   def scrape_all
@@ -49,7 +51,7 @@ class BulkFpbScraper
         if last_results.all? { |r| r[:success] && r[:data][:team_name].empty? }
           empty_team_count += 1
           log("Found #{empty_team_count} consecutive empty teams, might be at the end")
-          break if empty_team_count >= 5 && !@end_id # Only break for empty teams if no end_id specified
+          break if empty_team_count >= MAX_EMPTY_IN_ROW && !@end_id # Only break for empty teams if no end_id specified
         else
           empty_team_count = 0
         end
@@ -83,15 +85,24 @@ class BulkFpbScraper
   end
 
   def load_scraped_ids
-    if File.exist?("#{OUTPUT_DIR}/scraped_ids.json")
-      Set.new(JSON.parse(File.read("#{OUTPUT_DIR}/scraped_ids.json")))
+    # Load scraped IDs from first column of teams.csv
+    if File.exist?("#{OUTPUT_DIR}/teams.csv")
+      CSV.read("#{OUTPUT_DIR}/teams.csv", col_sep: ';').map { |row| row.first.to_i }.to_set
     else
       Set.new
     end
   end
 
-  def save_scraped_ids
-    File.write("#{OUTPUT_DIR}/scraped_ids.json", JSON.pretty_generate(@scraped_ids.to_a))
+  def load_empty_ids
+    if File.exist?("#{OUTPUT_DIR}/empty_ids.json")
+      Set.new(JSON.parse(File.read("#{OUTPUT_DIR}/empty_ids.json")))
+    else
+      Set.new
+    end
+  end
+
+  def save_empty_ids
+    File.write("#{OUTPUT_DIR}/empty_ids.json", JSON.pretty_generate(@empty_ids.to_a))
   end
 
   def generate_next_batch(current_id)
@@ -103,7 +114,7 @@ class BulkFpbScraper
 
     batch = (current_id..end_of_batch).to_a
     # Filter out already scraped IDs
-    batch.reject { |id| @scraped_ids.include?(id) }
+    batch.reject { |id| @scraped_ids.include?(id) || @empty_ids.include?(id) }
   end
 
   def process_batch(batch)
@@ -119,20 +130,21 @@ class BulkFpbScraper
 
       if result[:data][:team_name].empty?
         log("Empty team found for ID #{result[:id]}")
+        @empty_ids.add(result[:id])
       else
         save_team_data(result[:id], result[:data])
+        @scraped_ids.add(result[:id])
       end
 
-      @scraped_ids.add(result[:id])
     end
 
-    save_scraped_ids
+    save_empty_ids
     results
   end
 
   def process_team(id)
     url = "#{BASE_URL}#{id}"
-    return { success: true, id: id, data: nil } if @scraped_ids.include?(id)
+    return { success: true, id: id, data: nil } if @scraped_ids.include?(id) || @empty_ids.include?(id)
 
     retries = 0
 
