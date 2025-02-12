@@ -77,9 +77,9 @@ class FpbScraper
   def get_age_and_gender(doc)
     age_comp = doc.css('div.team-level').text.strip.split(' | ')
     age_group = age_comp.first
-    split_age_group = age_group.split(' ')
-    gender = split_age_group.pop
-    age_group = split_age_group.join(' ')
+    split_age_group = age_group&.split(' ')
+    gender = split_age_group&.pop
+    age_group = split_age_group&.join(' ')
     [age_group, gender]
   end
 

@@ -216,7 +216,7 @@ class FpbCalendar
     calendars = service.list_calendar_lists.items
     puts "There are #{calendars.size} calendars:"
     calendars.each do |calendar|
-      puts "#{calendar.summary}"
+      puts "#{calendar.summary}: #{calendar.id}"
     end
     puts "-" * 20
 
@@ -225,5 +225,12 @@ class FpbCalendar
       tmp.list_acls(calendar.id)
       puts
     end
+  end
+
+  def self.delete_calendar(calendar_id)
+    tmp = new('https://www.fpb.pt/equipa/')
+    service = tmp.service
+    service.delete_calendar(calendar_id)
+    puts "Deleted calendar: #{calendar_id}"
   end
 end
