@@ -124,8 +124,8 @@ class FpbScraper
       teams = game_wrapper.css('span.fullName').map(&:text).map(&:strip)
       location_element = game_wrapper.at_css('div.location-wrapper')
       competition = location_element&.css('div.competition')&.text&.strip
-      location_arr = location_element&.text&.strip.split("\r\n").map(&:strip).reject(&:empty?) - [competition]
-      location = location_arr.first.split.join(' ') if location_arr
+      location_arr = location_element&.text&.strip&.split("\r\n")&.map(&:strip)&.reject(&:empty?) - [competition]
+      location = location_arr.first.split.join(' ') if location_arr && !location_arr.empty?
       link = game_wrapper.parent['href']
       full_link = "https://www.fpb.pt#{link}" if link
       result = game_wrapper.at_css('div.results_wrapper')&.text&.split&.join(' ')
