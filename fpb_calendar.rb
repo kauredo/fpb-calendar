@@ -156,26 +156,36 @@ class FpbCalendar
         end
       end
 
-      event = Google::Apis::CalendarV3::Event.new(
-        summary: event_summary,
-        description: event_description,
-        location: game[:location],
-        start: Google::Apis::CalendarV3::EventDateTime.new(date_time: start_time.iso8601, time_zone: 'Europe/Lisbon'),
-        end: Google::Apis::CalendarV3::EventDateTime.new(date_time: end_time.iso8601, time_zone: 'Europe/Lisbon'),
-        visibility: 'public'
-      )
-      service.insert_event(calendar_id, event)
-      puts "Added event: #{event.summary}"
+      # Skip past events or events without time
+      if !game[:time].empty?
+        event = Google::Apis::CalendarV3::Event.new(
+          summary: event_summary,
+          description: event_description,
+          location: game[:location],
+          start: Google::Apis::CalendarV3::EventDateTime.new(
+            date_time: start_time.iso8601,
+            time_zone: 'Europe/Lisbon'
+          ),
+          end: Google::Apis::CalendarV3::EventDateTime.new(
+            date_time: end_time.iso8601,
+            time_zone: 'Europe/Lisbon'
+          ),
+          visibility: 'public'
+        )
+
+        puts "Added event: #{event.summary}"
+        service.insert_event(calendar_id, event)
+      else
+        puts "Skipping event without time: #{event_summary}"
+      end
     end
   end
 
   def remove_stale_events(calendar_id)
-    time_min = Time.now.utc.iso8601
     events = service.list_events(
       calendar_id,
       single_events: true,
-      order_by: 'startTime',
-      time_min: time_min
+      order_by: 'startTime'
     ).items
 
     current_games = team_data[:games].map do |game|
@@ -189,6 +199,10 @@ class FpbCalendar
       current_games.any? do |game|
         event.summary == game[:summary] && event.start.date_time.to_s == game[:date_time]
       end
+    end
+
+    events_to_remove = events_to_remove.select do |event|
+      event.start.date_time.hour != 0 && event.start.date_time.minute != 0
     end
 
     if events_to_remove.empty?
