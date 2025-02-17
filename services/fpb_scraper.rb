@@ -31,11 +31,14 @@ class FpbScraper
   def fetch_team_data(results: false)
     html = fetch_page
     doc = Nokogiri::HTML(html)
+    name = extract_team_name(doc)
+    info = extract_team_info(doc)
+    name = name + ' | ' + info[:age_group] + ' ' + info[:gender]
 
     {
-      team_name: extract_team_name(doc),
+      team_name: name,
       games: parse_games(doc, results: results),
-      team_info: extract_team_info(doc),
+      team_info: info
     }
   end
 

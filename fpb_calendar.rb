@@ -53,8 +53,15 @@ class FpbCalendar
     if calendars.key?(url)
       calendar_id = calendars[url]
       begin
-        service.get_calendar(calendar_id)
+        calendar = service.get_calendar(calendar_id)
         puts "Found existing calendar for URL #{url}"
+
+        if calendar.summary != team_name
+          puts "Team name changed from '#{calendar.summary}' to '#{team_name}'"
+          calendar.summary = team_name
+          service.update_calendar(calendar_id, calendar)
+          puts "Updated calendar name to: #{team_name}"
+        end
       rescue Google::Apis::ClientError
         puts "Calendar not found, creating a new one..."
         calendar_id = create_calendar
@@ -71,7 +78,7 @@ class FpbCalendar
 
   def create_calendar
     calendar = Google::Apis::CalendarV3::Calendar.new(
-      summary: team_data[:team_name],
+      summary: team_name,
       time_zone: 'Europe/Lisbon'
     )
     result = service.insert_calendar(calendar)
