@@ -50,7 +50,7 @@
         <div class="team-selector container">
           <div class="filters-flex">
             <div class="filter-item">
-              <label for="age">Idade:</label>
+              <label for="age">Escalão:</label>
               <select id="age" x-model="filters.age" @change="updateFilters()">
                 <option value="">Todas</option>
                 <template x-for="value in getUniqueValues('age')" :key="value">
@@ -70,13 +70,13 @@
             </div>
 
             <div class="filter-item">
-              <label for="name">Nome:</label>
+              <label for="name">Nome da equipa:</label>
               <input
                 type="text"
                 id="name"
                 x-model="filters.name"
                 @input="debounceUpdateFilters()"
-                placeholder="Pesquisar equipa..."
+                placeholder="Pesquisar equipa"
                 class="search-input"
               >
             </div>
@@ -100,7 +100,7 @@
         <form id="invite-form" class="container" action="/invite" method="POST">
           <div class="form-group">
             <label for="email">Email:</label>
-            <input type="email" name="email" id="email" required>
+            <input type="email" name="email" id="email" required placeholder="Insere o teu email">
           </div>
 
           <div class="form-group">
