@@ -12,6 +12,8 @@ set :protection, :except => :host # Disable Rack::Protection HostAuthorization
 
 HEADERS = %w[id name age gender season url]
 
+$teams_cache = nil
+
 def load_csv_data
   teams = []
   CSV.foreach('data/teams.csv', col_sep: ';') do |row|
@@ -22,7 +24,7 @@ def load_csv_data
     name_has_excluded_term = excluded_terms.any? { |term| team["name"].to_s.downcase.include?(term) }
 
     # Check if season is current or previous
-   current_year = Time.now.year
+    current_year = Time.now.year
     month = Time.now.month
 
     if month < 8 # Before August (e.g., July 2025 → still in 2024-2025)
@@ -37,17 +39,13 @@ def load_csv_data
     valid_season = team["season"] == current_season || team["season"] == extra_season
 
     # Add team if it passes both checks
-    if !name_has_excluded_term && valid_season
-      teams << team
-    end
+    teams << team if !name_has_excluded_term && valid_season
   end
   teams
 end
 
-
-before do
-  @teams ||= load_csv_data
-end
+# Load data once when the app starts
+$teams_cache = load_csv_data
 
 # Homepage with the form
 get '/' do
@@ -83,13 +81,15 @@ get '/sitemap.xml' do
   XML
 end
 
+# API endpoint to get teams
 get '/api/teams' do
   content_type :json
-  @teams.to_json
+  $teams_cache.to_json
 end
 
+# Manually refresh the cache (only when needed)
 get '/api/refresh' do
-  @teams = load_csv_data
+  $teams_cache = load_csv_data
   status 200
   'Data refreshed'
 end
