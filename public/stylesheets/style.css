@@ -238,7 +238,7 @@ button:hover {
 
 .team-details {
   font-size: 0.9em; /* Optional: Make it slightly smaller */
-  color: gray; /* Optional: Different color */
+  color: #888888; /* Optional: Different color */
 }
 
 .team-button:hover {
@@ -250,6 +250,10 @@ button:hover {
   background: #009d3d;
   color: white;
   border-color: #018232;
+}
+
+.team-button.selected .team-details {
+  color: #f4f4f4;
 }
 
 /* Make the team URL input readonly and visually distinct */
