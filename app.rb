@@ -1,5 +1,7 @@
 require 'sinatra'
 require 'rack/attack'
+require 'csv'
+require 'pry'
 require_relative 'fpb_calendar'
 use Rack::Attack
 
@@ -7,6 +9,45 @@ set :port, ENV['PORT'] || 4567
 set :bind, '0.0.0.0'
 set :hosts, ['fpb-calendar.fly.dev', 'localhost'] # Sinatra will enforce allowed hosts
 set :protection, :except => :host # Disable Rack::Protection HostAuthorization
+
+HEADERS = %w[id name age gender season url]
+
+def load_csv_data
+  teams = []
+  CSV.foreach('data/teams.csv', col_sep: ';') do |row|
+    team = HEADERS.zip(row).to_h
+
+    # Check if name contains any excluded terms
+    excluded_terms = ["venc", "º", "designar", "3x3"]
+    name_has_excluded_term = excluded_terms.any? { |term| team["name"].to_s.downcase.include?(term) }
+
+    # Check if season is current or previous
+   current_year = Time.now.year
+    month = Time.now.month
+
+    if month < 8 # Before August (e.g., July 2025 → still in 2024-2025)
+      current_season = "#{current_year - 1}-#{current_year}" # "2024-2025" if in July 2025
+      extra_season = "#{current_year}-#{current_year}"       # "2025-2025" if in July 2025
+    else # August or later (e.g., October 2025 → new season starts)
+      current_season = "#{current_year}-#{current_year + 1}" # "2025-2026" if in October 2025
+      extra_season = nil
+    end
+
+    # Check if the team's season matches the required seasons
+    valid_season = team["season"] == current_season || team["season"] == extra_season
+
+    # Add team if it passes both checks
+    if !name_has_excluded_term && valid_season
+      teams << team
+    end
+  end
+  teams
+end
+
+
+before do
+  @teams ||= load_csv_data
+end
 
 # Homepage with the form
 get '/' do
@@ -40,6 +81,11 @@ get '/sitemap.xml' do
       #{urls.map { |url| "<url><loc>#{url}</loc><lastmod>#{Time.now.utc.iso8601}</lastmod></url>" }.join}\n
     </urlset>
   XML
+end
+
+get '/api/teams' do
+  content_type :json
+  @teams.to_json
 end
 
 # Handle form submissions
