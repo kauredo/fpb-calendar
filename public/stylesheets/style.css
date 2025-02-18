@@ -15,9 +15,18 @@ body {
   justify-content: space-between;
 }
 
-h1 {
+h1,
+h2 {
   text-align: center;
   color: #333;
+  margin-bottom: 0;
+}
+
+h2 {
+  max-width: 600px;
+  font-size: 1.25em;
+  color: #888888;
+  margin-top: 0.5rem;
 }
 
 form,
