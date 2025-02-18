@@ -172,13 +172,6 @@ button:hover {
 }
 
 /* Team selector styling */
-.team-selector {
-  margin-bottom: 2rem;
-  padding: 1rem;
-  background: #f5f5f5;
-  border-radius: 8px;
-}
-
 .filters-flex {
   display: flex;
   justify-content: space-between;
@@ -261,7 +254,7 @@ button:hover {
 
 /* Make the team URL input readonly and visually distinct */
 #team_url {
-  background-color: #e8e8e8;
+  background-color: #f4f4f4;
   cursor: not-allowed;
 }
 

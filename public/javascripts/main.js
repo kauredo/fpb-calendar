@@ -33,8 +33,17 @@ document.addEventListener("alpine:init", () => {
 
     async init() {
       try {
+        const cachedTeams = localStorage.getItem("teams");
+        if (cachedTeams) {
+          this.teams = JSON.parse(cachedTeams);
+          this.filteredTeams = this.teams;
+          document.getElementById("loading-screen").style.display = "none";
+          return;
+        }
+
         const response = await fetch("/api/teams");
         this.teams = await response.json();
+        localStorage.setItem("teams", JSON.stringify(this.teams)); // Cache data
         this.filteredTeams = this.teams;
         document.getElementById("loading-screen").style.display = "none";
         // console.log("Teams loaded:", this.teams.length);
