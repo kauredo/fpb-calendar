@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendário FPB: <%= @team['name'] %> (<%= @team['age'] %> <%= @team['gender'].chars.first %>)</title>
+    <meta name="description" content="Adiciona facilmente os jogos da <%= @team['name'] %> (<%= @team['age'] %> <%= @team['gender'].chars.first %>) ao teu calendário pessoal.">
+    <meta name="keywords" content="Calendário FPB, jogos basquetebol, Federação Portuguesa de Basquetebol, calendário Google, equipa basquetebol">
+    <meta name="author" content="Vasco KF">
+    <meta name="robots" content="index, follow">
+
+    <!-- Google Search Console verification -->
+    <meta name="google-site-verification" content="I1b2F2Y0JNu9CUcMiQJKBa_51op7tWkpfDRLPtWV8aQ" />
+
+    <!-- Open Graph for social sharing -->
+    <meta property="og:title" content="Calendário FPB: <%= @team['name'] %> (<%= @team['age'] %> <%= @team['gender'].chars.first %>)">
+    <meta property="og:description" content="Adiciona facilmente os jogos da <%= @team['name'] %> (<%= @team['age'] %> <%= @team['gender'].chars.first %>) ao teu calendário pessoal.">
+    <meta property="og:url" content="https://fpb-calendar.fly.dev/">
+    <meta property="og:image" content="https://fpb-calendar.fly.dev/images/logo.png">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Calendário FPB: <%= @team['name'] %> (<%= @team['age'] %> <%= @team['gender'].chars.first %>)">
+    <meta name="twitter:description" content="Adiciona facilmente os jogos da <%= @team['name'] %> (<%= @team['age'] %> <%= @team['gender'].chars.first %>) ao teu calendário pessoal.">
+    <meta name="twitter:image" content="https://fpb-calendar.fly.dev/images/logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/stylesheets/style.css">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+  </head>
+  <body>
+    <main>
+      <div id="loading-screen">
+        <div class="spinner"></div>
+      </div>
+      <h1>Calendário FPB</h1>
+      <h2><%= @team['name'] %> (<%= @team['age'] %> <%= @team['gender'].chars.first %>)</h2>
+
+      <div class="calendar-container">
+        <!-- Upcoming Games Section -->
+        <div class="upcoming-games">
+          <h3 class="section-title">Próximos Jogos</h3>
+          <% @games.select { |game| game['date'] >= Date.today.to_s }.sort_by { |game| game['date'] }.each do |game| %>
+            <div class="game-card upcoming">
+              <div class="game-date">
+                <span class="date"><%= game['date'] %></span>
+                <span class="time"><%= game['time'] %></span>
+              </div>
+
+              <div class="game-details">
+                <h3><%= game['teams'] %></h3>
+                <p class="location"><%= game['location'] %></p>
+                <p class="competition"><%= game['competition'] %></p>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Past Games Section -->
+        <div class="past-games">
+          <h3 class="section-title">Jogos Anteriores</h3>
+          <% @games.select { |game| game['date'] < Date.today.to_s }.sort_by { |game| game['date'] }.reverse.each do |game| %>
+            <div class="game-card past">
+              <div class="game-date">
+                <span class="date"><%= game['date'] %></span>
+                <span class="time"><%= game['time'] %></span>
+              </div>
+
+              <div class="game-details">
+                <h3><%= game['teams'] %></h3>
+                <p class="location"><%= game['location'] %></p>
+                <p class="competition"><%= game['competition'] %></p>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </main>
+    <footer class="footer">
+      <p>Este projeto não é afiliado com <a href="https://www.fpb.pt/" target="_blank" rel="noreferrer noopener">Federação Portuguesa de Basquetebol</a> ou qualquer uma das suas entidades. É um projeto pessoal sem fins lucrativos.</p>
+      <p>Qualquer problema ou sugestão, por favor contacte-me <a href="mailto:vasco.kf@gmail.com">por email</a>. Obrigado.</p>
+    </footer>
+    <script src="/javascripts/calendar.js"></script>
+  </body>
+</html>

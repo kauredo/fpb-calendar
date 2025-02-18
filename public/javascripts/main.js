@@ -1,6 +1,9 @@
 // Show the loading screen when the form is submitted
 document.addEventListener("DOMContentLoaded", function () {
-  // document.getElementById("loading-screen").style.display = "none";
+  // if page is not root, hide loading screen
+  if (window.location.pathname !== "/") {
+    document.getElementById("loading-screen").style.display = "none";
+  }
 
   const form = document.getElementById("invite-form");
   if (form) {
@@ -90,6 +93,13 @@ document.addEventListener("alpine:init", () => {
     selectTeam(team) {
       this.selectedTeam = team;
       document.getElementById("team_url").value = team.url;
+      // make button not disabled and redirect to /calendar/id
+      btn = document.getElementById("calendar-button");
+      btn.disabled = false;
+      btn.onclick = function (e) {
+        e.preventDefault();
+        window.location.href = "/calendar/" + team.id;
+      };
     },
   }));
 });

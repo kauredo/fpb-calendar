@@ -10,46 +10,87 @@ set :bind, '0.0.0.0'
 set :hosts, ['fpb-calendar.fly.dev', 'localhost'] # Sinatra will enforce allowed hosts
 set :protection, :except => :host # Disable Rack::Protection HostAuthorization
 
-HEADERS = %w[id name age gender season url]
+TEAM_HEADERS = %w[id name age gender season url]
+GAME_HEADERS = %w[name age gender date time teams result location competition season link]
+EXCLUDED_TERMS = Set.new(["venc", "º", "designar", "3x3"]) # Precompute excluded terms for faster lookup
 
-$teams_cache = nil
+def load_teams_csv_data
+  # Check if season is current or previous
+  current_year = Time.now.year
+  month = Time.now.month
 
-def load_csv_data
+  if month < 8 # Before August (e.g., July 2025 → still in 2024-2025)
+    current_season = "#{current_year - 1}-#{current_year}" # "2024-2025" if in July 2025
+    extra_season = "#{current_year}-#{current_year}"       # "2025-2025" if in July 2025
+  else # August or later (e.g., October 2025 → new season starts)
+    current_season = "#{current_year}-#{current_year + 1}" # "2025-2026" if in October 2025
+    extra_season = nil
+  end
+
   teams = []
   CSV.foreach('data/teams.csv', col_sep: ';') do |row|
-    team = HEADERS.zip(row).to_h
+    team = TEAM_HEADERS.zip(row).to_h
 
-    # Check if name contains any excluded terms
-    excluded_terms = ["venc", "º", "designar", "3x3"]
-    name_has_excluded_term = excluded_terms.any? { |term| team["name"].to_s.downcase.include?(term) }
+    # Use Set lookup instead of array iteration
+    next if EXCLUDED_TERMS.any? { |term| team["name"].to_s.downcase.include?(term) }
 
-    # Check if season is current or previous
-    current_year = Time.now.year
-    month = Time.now.month
+    # Simple season check
+    valid_season = team["season"] == current_season || (extra_season && team["season"] == extra_season)
 
-    if month < 8 # Before August (e.g., July 2025 → still in 2024-2025)
-      current_season = "#{current_year - 1}-#{current_year}" # "2024-2025" if in July 2025
-      extra_season = "#{current_year}-#{current_year}"       # "2025-2025" if in July 2025
-    else # August or later (e.g., October 2025 → new season starts)
-      current_season = "#{current_year}-#{current_year + 1}" # "2025-2026" if in October 2025
-      extra_season = nil
-    end
-
-    # Check if the team's season matches the required seasons
-    valid_season = team["season"] == current_season || team["season"] == extra_season
-
-    # Add team if it passes both checks
-    teams << team if !name_has_excluded_term && valid_season
+    teams << team if valid_season
   end
   teams
 end
 
+def load_games_csv_data(teams_cache)
+  games_by_team = {}
+
+  # Create efficient lookup hash for teams
+  teams_lookup = teams_cache.group_by { |team|
+    [
+      team["name"].downcase,
+      team["age"].downcase,
+      team["gender"].downcase,
+      team["season"].downcase
+    ].join("\0")
+  }
+
+  CSV.foreach('data/games.csv', col_sep: ';') do |row|
+    game = GAME_HEADERS.zip(row).to_h
+
+    # Create quick lookup key
+    lookup_key = [
+      game["name"].downcase,
+      game["age"].downcase,
+      game["gender"].downcase,
+      game["season"].downcase
+    ].join("\0")
+
+    # Find matching teams efficiently
+    matching_teams = teams_lookup[lookup_key]
+    next unless matching_teams
+
+    matching_teams.each do |team|
+      (games_by_team[team["id"].to_i] ||= []) << game
+    end
+  end
+
+  games_by_team
+end
+
 # Load data once when the app starts
-$teams_cache = load_csv_data
+$teams_cache = load_teams_csv_data
+$games_cache = load_games_csv_data($teams_cache)
 
 # Homepage with the form
 get '/' do
   erb :index
+end
+
+get '/calendar/:id' do
+  @team = $teams_cache.find { |team| team['id'].to_i == params[:id].to_i }
+  @games = $games_cache[params[:id].to_i] || []
+  erb :calendar
 end
 
 get '/health' do
@@ -89,9 +130,18 @@ end
 
 # Manually refresh the cache (only when needed)
 get '/api/refresh' do
-  $teams_cache = load_csv_data
+  $teams_cache = load_teams_csv_data
+  $games_cache = load_games_csv_data($teams_cache)
   status 200
   'Data refreshed'
+end
+
+get '/api/teams/:id' do
+  content_type :json
+  id = params[:id].to_i
+  team = $teams_cache.find { |team| team['id'].to_i == id }
+  games = $games_cache[id] || []
+  { team: team, games: games }.to_json
 end
 
 # Handle form submissions
