@@ -88,6 +88,12 @@ get '/api/teams' do
   @teams.to_json
 end
 
+get '/api/refresh' do
+  @teams = load_csv_data
+  status 200
+  'Data refreshed'
+end
+
 # Handle form submissions
 post '/invite' do
   email = params[:email]
