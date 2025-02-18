@@ -33,7 +33,8 @@ class FpbScraper
     doc = Nokogiri::HTML(html)
     name = extract_team_name(doc)
     info = extract_team_info(doc)
-    name = name + ' | ' + info[:age_group] + ' ' + info[:gender]
+
+    name = name + ' | ' + info[:age_group] + ' ' + info[:gender] if !info[:age_group].nil? && !info[:gender].nil?
 
     {
       team_name: name,
