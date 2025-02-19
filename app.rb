@@ -93,7 +93,7 @@ get '/calendar/:id' do
   @team = $teams_cache.find { |team| team['id'].to_i == team_id }
 
   # Check if data exists and if it's older than 1 hour
-  if !$games_cache[team_id] || Time.now - ($games_cache_timestamps[team_id] || Time.at(0)) > 3600 # 1 hour
+  if !$games_cache[team_id] || Time.now - ($games_cache_timestamps[team_id] || Time.at(0)) > ENV['CACHE_EXPIRATION'].to_i
     puts "Scraping new data for team #{team_id}"
     scraper = FpbScraper.new("https://www.fpb.pt/equipa/equipa_#{team_id}")
     data = scraper.fetch_team_data(results: true)
