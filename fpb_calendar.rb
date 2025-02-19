@@ -204,12 +204,14 @@ class FpbCalendar
 
     events_to_remove = events.reject do |event|
       current_games.any? do |game|
-        event.summary == game[:summary] && event.start.date_time.to_s == game[:date_time]
-      end
-    end
+        # Keep the event if the new game is the same as the event
+        next true if event.summary == game[:summary] && event.start.date_time.to_s == game[:date_time]
 
-    events_to_remove = events_to_remove.select do |event|
-      event.start.date_time.hour != 0 && event.start.date_time.minute != 0
+        # Keep the event if the new game has an empty time (old events)
+        next true if event.summary == game[:summary] && (game[:time].nil? || game[:time].empty?)
+
+        false
+      end
     end
 
     if events_to_remove.empty?
