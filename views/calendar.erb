@@ -28,8 +28,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@uvarov.frontend/vanilla-calendar/build/vanilla-calendar.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@uvarov.frontend/vanilla-calendar/build/vanilla-calendar.min.js"></script>
 
     <link rel="stylesheet" href="/stylesheets/style.css">
+    <link rel="stylesheet" href="/stylesheets/calendar.css">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -43,45 +46,8 @@
       </div>
       <h1>Calendário FPB</h1>
       <h2><%= @team['name'] %> (<%= @team['age'] %> <%= @team['gender'].chars.first %>)</h2>
-
       <div class="calendar-container">
-        <!-- Upcoming Games Section -->
-        <div class="upcoming-games">
-          <h3 class="section-title">Próximos Jogos</h3>
-          <% @games.select { |game| game['date'] >= Date.today.to_s }.sort_by { |game| game['date'] }.each do |game| %>
-            <div class="game-card upcoming">
-              <div class="game-date">
-                <span class="date"><%= game['date'] %></span>
-                <span class="time"><%= game['time'] %></span>
-              </div>
-
-              <div class="game-details">
-                <h3><%= game['teams'] %></h3>
-                <p class="location"><%= game['location'] %></p>
-                <p class="competition"><%= game['competition'] %></p>
-              </div>
-            </div>
-          <% end %>
-        </div>
-
-        <!-- Past Games Section -->
-        <div class="past-games">
-          <h3 class="section-title">Jogos Anteriores</h3>
-          <% @games.select { |game| game['date'] < Date.today.to_s }.sort_by { |game| game['date'] }.reverse.each do |game| %>
-            <div class="game-card past">
-              <div class="game-date">
-                <span class="date"><%= game['date'] %></span>
-                <span class="time"><%= game['time'] %></span>
-              </div>
-
-              <div class="game-details">
-                <h3><%= game['teams'] %></h3>
-                <p class="location"><%= game['location'] %></p>
-                <p class="competition"><%= game['competition'] %></p>
-              </div>
-            </div>
-          <% end %>
-        </div>
+        <div id="calendar"></div>
       </div>
     </main>
     <footer class="footer">

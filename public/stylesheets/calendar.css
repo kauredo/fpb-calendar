@@ -1,0 +1,145 @@
+.vanilla-calendar {
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  font-family: "Roboto", sans-serif;
+}
+
+/* Header styling */
+.vanilla-calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.vanilla-calendar-header__content {
+  color: #333;
+  font-weight: bold;
+}
+
+.vanilla-calendar-arrow {
+  background: #f4f4f4;
+  border: none;
+  color: #009d3d;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.vanilla-calendar-arrow:hover {
+  background: #f0f0f0;
+}
+
+/* Week days styling */
+.vanilla-calendar-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 10px;
+}
+
+.vanilla-calendar-week__day {
+  color: #888888;
+  font-size: 0.9em;
+  padding: 8px;
+  text-align: center;
+}
+
+/* Days grid styling */
+.vanilla-calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.vanilla-calendar-day {
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s;
+  position: relative;
+}
+
+/* Today's date */
+.vanilla-calendar-day_today {
+  background-color: #f4f4f4;
+  color: #009d3d;
+  font-weight: bold;
+}
+
+/* Hover states */
+.vanilla-calendar-day:hover {
+  background-color: #f4f4f4;
+}
+
+/* Games popup styling */
+.games-popup {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  max-width: 300px;
+}
+
+.game-details {
+  padding: 12px 0;
+  border-bottom: 1px solid #f4f4f4;
+}
+
+.game-details:last-child {
+  border-bottom: none;
+}
+
+.game-details h3 {
+  margin: 0 0 8px 0;
+  font-size: 1em;
+  color: #333;
+}
+
+.game-details p {
+  margin: 4px 0;
+  font-size: 0.9em;
+  color: #666;
+}
+
+.game-details .competition {
+  color: #888888;
+}
+
+.game-details .result {
+  color: #009d3d;
+  font-weight: bold;
+}
+
+.game-details a {
+  display: inline-block;
+  margin-top: 8px;
+  color: #009d3d;
+  text-decoration: none;
+  font-size: 0.9em;
+}
+
+.game-details a:hover {
+  text-decoration: underline;
+}
+
+/* Disabled dates */
+.vanilla-calendar-day_disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Popup positioning */
+.vanilla-calendar-popup {
+  z-index: 1000;
+}
+
+/* Marker styling */
+.vanilla-calendar-day_marked {
+  background-color: rgba(0, 157, 61, 0.1);
+}

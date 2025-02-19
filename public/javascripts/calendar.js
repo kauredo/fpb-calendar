@@ -1,129 +1,155 @@
-// Show the loading screen when the form is submitted
+// Add the calendar to the team page
 document.addEventListener("DOMContentLoaded", function () {
-  // if page is not root, hide loading screen
-  if (window.location.pathname !== "/") {
-    document.getElementById("loading-screen").style.display = "none";
-  }
+  const loadingScreen = document.getElementById("loading-screen");
+  const teamId = window.location.pathname.split("/").pop();
 
-  const form = document.getElementById("invite-form");
-  if (form) {
-    form.addEventListener("submit", function () {
-      document.getElementById("loading-screen").style.display = "flex";
-    });
-  }
+  fetch(`/api/teams/${teamId}`)
+    .then(response => response.json())
+    .then(data => {
+      // Get current date
+      const today = new Date();
+      const currentMonth = today.getMonth();
+      const currentYear = today.getFullYear();
 
-  document
-    .querySelector(".dropdown-toggle")
-    .addEventListener("click", function () {
-      var dropdown = this.parentElement;
-      dropdown.classList.toggle("open");
-    });
-});
+      const calendar = new VanillaCalendar("#calendar", {
+        settings: {
+          lang: "pt-PT",
+          selection: {
+            day: "single",
+          },
+          selected: {
+            dates: [],
+            month: currentMonth,
+            year: currentYear,
+          },
+          visibility: {
+            theme: "light",
+            weekend: true,
+            today: true,
+            disabled: false,
+          },
+        },
+        actions: {
+          clickDay(e, dates) {
+            const clickedDate = dates[0];
+            const gamesOnDay = data.games.filter(
+              game => game.date === clickedDate
+            );
 
-document.addEventListener("DOMContentLoaded", () => {
-  const calendar = {
-    currentMonth: new Date(),
-    games: [],
+            if (gamesOnDay.length > 0) {
+              const popupContent = document.createElement("div");
+              popupContent.className = "games-popup";
 
-    init() {
-      this.loadGames();
-    },
+              gamesOnDay.forEach(game => {
+                const gameEl = document.createElement("div");
+                gameEl.className = "game-details";
 
-    async loadGames() {
-      const response = await fetch(`/api/teams/${params.id}`);
-      const data = await response.json();
-      this.games = data.games;
-      this.renderCalendar();
-    },
+                const gameTitle = document.createElement("h3");
+                gameTitle.textContent = game.teams;
 
-    renderCalendar() {
-      const calendarDays = document.getElementById("calendar-days");
-      calendarDays.innerHTML = "";
+                const gameInfo = document.createElement("div");
+                gameInfo.innerHTML = `
+                  <p class="competition">${game.competition}</p>
+                  <p class="location">${game.location}</p>
+                  ${
+                    game.result
+                      ? `<p class="result">Resultado: ${game.result}</p>`
+                      : `<p class="time">Hora: ${game.time}</p>`
+                  }
+                  ${
+                    game.link
+                      ? `<a href="${game.link}" target="_blank" rel="noopener noreferrer">Ver detalhes →</a>`
+                      : ""
+                  }
+                `;
 
-      const firstDay = new Date(
-        this.currentMonth.getFullYear(),
-        this.currentMonth.getMonth(),
-        1
-      );
-      const lastDay = new Date(
-        this.currentMonth.getFullYear(),
-        this.currentMonth.getMonth() + 1,
-        0
-      );
+                gameEl.appendChild(gameTitle);
+                gameEl.appendChild(gameInfo);
+                popupContent.appendChild(gameEl);
+              });
 
-      // Add empty days for the start of the month
-      for (let i = 0; i < firstDay.getDay(); i++) {
-        calendarDays.appendChild(this.createDayElement(""));
-      }
+              // Remove any existing popup
+              const existingPopup = document.querySelector(".games-popup");
+              if (existingPopup) {
+                existingPopup.remove();
+              }
 
-      // Add days with games
-      for (let date = 1; date <= lastDay.getDate(); date++) {
-        const dayGames = this.games.filter(game => {
-          const gameDate = new Date(game.date);
-          return (
-            gameDate.getDate() === date &&
-            gameDate.getMonth() === this.currentMonth.getMonth() &&
-            gameDate.getFullYear() === this.currentMonth.getFullYear()
-          );
+              // Position and show the popup
+              const dayElement = e.target;
+              const rect = dayElement.getBoundingClientRect();
+
+              popupContent.style.position = "absolute";
+              popupContent.style.left = `${rect.left}px`;
+              popupContent.style.top = `${rect.bottom + window.scrollY}px`;
+
+              document.body.appendChild(popupContent);
+              updateMarks(calendar, data.games);
+
+              // Close popup when clicking outside
+              const closePopup = e => {
+                if (
+                  !popupContent.contains(e.target) &&
+                  !dayElement.contains(e.target)
+                ) {
+                  popupContent.remove();
+                  document.removeEventListener("click", closePopup);
+                }
+                updateMarks(calendar, data.games);
+              };
+
+              // Delay adding the event listener to prevent immediate closure
+              setTimeout(() => {
+                document.addEventListener("click", closePopup);
+                updateMarks(calendar, data.games);
+              }, 0);
+            }
+          },
+          clickArrow(e) {
+            updateMarks(calendar, data.games);
+          },
+        },
+      });
+
+      function updateMarks(calendar, games) {
+        console.log("Updating marks", calendar);
+        const currentMonth = calendar.selectedMonth;
+        const currentYear = calendar.selectedYear;
+
+        // Get all date elements
+        const dateElements = calendar.HTMLElement.querySelectorAll(
+          ".vanilla-calendar-day__btn"
+        );
+
+        // Remove existing marks
+        dateElements.forEach(dateEl => {
+          dateEl.classList.remove("has-game", "has-multiple-games");
+          dateEl.removeAttribute("data-game-count");
         });
 
-        calendarDays.appendChild(this.createDayElement(date, dayGames));
+        // Add new marks
+        dateElements.forEach(dateEl => {
+          const date = dateEl.dataset.calendarDay;
+          const gamesOnDay = games.filter(game => game.date === date);
+
+          if (gamesOnDay.length > 0) {
+            dateEl.classList.add("has-game");
+            dateEl.setAttribute("data-game-count", gamesOnDay.length);
+
+            if (gamesOnDay.length > 1) {
+              dateEl.classList.add("has-multiple-games");
+            }
+          }
+        });
       }
 
-      this.updateMonthDisplay();
-    },
+      calendar.init();
 
-    createDayElement(date, games = []) {
-      const dayElement = document.createElement("div");
-      dayElement.className = `calendar-day ${games.length ? "has-game" : ""}`;
-
-      if (date) {
-        dayElement.textContent = date;
-
-        if (games.length) {
-          const gameList = document.createElement("div");
-          gameList.className = "game-list";
-          gameList.style.position = "absolute";
-          gameList.style.bottom = "20px";
-          gameList.style.left = "5px";
-          gameList.style.right = "5px";
-          gameList.style.fontSize = "0.8em";
-          gameList.style.color = "#666";
-
-          games.forEach(game => {
-            const gameElement = document.createElement("div");
-            gameElement.textContent = `${game.name} vs ${game.teams}`;
-            gameList.appendChild(gameElement);
-          });
-
-          dayElement.appendChild(gameList);
-        }
-      }
-
-      return dayElement;
-    },
-
-    updateMonthDisplay() {
-      const monthNames = [
-        "Janeiro",
-        "Fevereiro",
-        "Março",
-        "Abril",
-        "Maio",
-        "Junho",
-        "Julho",
-        "Agosto",
-        "Setembro",
-        "Outubro",
-        "Novembro",
-        "Dezembro",
-      ];
-      document.getElementById("current-month").textContent = `${
-        monthNames[this.currentMonth.getMonth()]
-      } ${this.currentMonth.getFullYear()}`;
-    },
-  };
-
-  // Initialize the calendar when the page loads
-  calendar.init();
+      // Initial marking of dates with games
+      updateMarks(calendar, data.games);
+      loadingScreen.style.display = "none";
+    })
+    .catch(error => {
+      console.error("Error fetching calendar data:", error);
+      loadingScreen.style.display = "none";
+    });
 });
