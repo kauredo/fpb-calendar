@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Erro</title>
+    <title>Erro - Calendário FPB</title>
+    <meta name="robots" content="noindex, nofollow">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,19 +16,45 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
+
+    <!-- Add status code in header for better error tracking -->
+    <% if defined?(status) %>
+      <meta name="status" content="<%= status %>">
+    <% end %>
   </head>
   <body>
     <main>
       <h1>Erro</h1>
       <div class="container">
-        <p>A aplicação encontrou um erro: <%= @error_message %></p>
-        <p>Por favor corrige e tente novamente.</p>
+        <% if defined?(@team_name) && @team_name == "Equipa não encontrada" %>
+          <p>A equipa solicitada não foi encontrada.</p>
+          <p>Por favor, verifica se o URL está correto ou escolhe outra equipa.</p>
+        <% else %>
+          <p>A aplicação encontrou um erro: <%= @error_message %></p>
+          <p>Por favor corrige e tenta novamente.</p>
+        <% end %>
         <button onclick="window.location.href='/'">Voltar</button>
       </div>
     </main>
     <footer class="footer">
-      <p>Nota: este projeto não é afiliado com <a href="https://www.fpb.pt/" target="_blank">Federação Portuguesa de Basquetebol</a> ou qualquer uma das suas entidades. É apenas um projeto pessoal.</p>
+      <p>Nota: este projeto não é afiliado com <a href="https://www.fpb.pt/" target="_blank" rel="noreferrer noopener">Federação Portuguesa de Basquetebol</a> ou qualquer uma das suas entidades. É apenas um projeto pessoal.</p>
       <p>Qualquer problema ou sugestão, por favor contacte-me <a href="mailto:vasco.kf@gmail.com">por email</a>. Obrigado.</p>
     </footer>
+
+    <% if defined?(status) && status == 404 %>
+      <!-- Structured data for error page -->
+      <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [{
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Página Inicial",
+          "item": "https://fpb-calendar.fly.dev/"
+        }]
+      }
+      </script>
+    <% end %>
   </body>
 </html>

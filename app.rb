@@ -79,8 +79,8 @@ def load_games_csv_data(teams_cache)
 end
 
 # Load data once when the app starts
-$teams_cache = ENV['APP_ENV'] == 'production' ? [] : load_teams_csv_data
-$games_cache = ENV['APP_ENV'] == 'production' ? {} : load_games_csv_data($teams_cache)
+$teams_cache = ENV['APP_ENV'] == 'production' ? load_teams_csv_data : []
+$games_cache = ENV['APP_ENV'] == 'production' ? load_games_csv_data($teams_cache) : {}
 $games_cache_timestamps = {}
 
 # Homepage with the form
@@ -92,63 +92,78 @@ get '/calendar/:id' do
   @team_id = params[:id].to_i
   @team = $teams_cache.find { |team| team['id'].to_i == @team_id }
 
-  # Check if data exists and if it's older than 1 hour
-  if !$games_cache[@team_id] || Time.now - ($games_cache_timestamps[@team_id] || Time.at(0)) > ENV['CACHE_EXPIRATION'].to_i
-    puts "Scraping new data for team #{@team_id}"
-    scraper = FpbScraper.new("https://www.fpb.pt/equipa/equipa_#{@team_id}")
-    data = scraper.fetch_team_data(results: true)
-    games = data[:games]
-
-    # Update the cache timestamp
-    $games_cache_timestamps[@team_id] = Time.now
-  else
-    puts "Using cached data for team #{@team_id}"
-    games = $games_cache[@team_id]
+  # Return 404 if team not found
+  unless @team
+    status 404
+    @team_name = "Equipa não encontrada"
+    return erb :error
   end
 
-  cached_games = $games_cache[@team_id] || []
-  tmp = games.map do |game|
-    cached_game = cached_games.find { |cached_game| cached_game['link'] == game[:link] }
-
-    if cached_game
-      merged_game = cached_game.merge(game.transform_keys(&:to_s)) do |key, game_value, cached_value|
-        # Reject arrays and Date instances
-        if [game_value, cached_value].any? { |v| v.is_a?(Array) || v.is_a?(Date) }
-          next game_value # Keep the existing game value (or nil if it was nil)
-        end
-
-        # Prefer non-nil and non-empty values
-        tmp_value = game_value.nil? || game_value == "" ? cached_value : game_value
-        tmp_value = '' if tmp_value.nil?
-
-        tmp_value
-      end
+  begin
+    # Check if data exists and if it's older than 1 hour
+    if !$games_cache[@team_id] || Time.now - ($games_cache_timestamps[@team_id] || Time.at(0)) > ENV['CACHE_EXPIRATION'].to_i
+      puts "Scraping new data for team #{@team_id}"
+      scraper = FpbScraper.new("https://www.fpb.pt/equipa/equipa_#{@team_id}")
+      data = scraper.fetch_team_data(results: true)
+      games = data[:games]
+      # Update the cache timestamp
+      $games_cache_timestamps[@team_id] = Time.now
     else
-      merged_game = game.transform_keys(&:to_s).transform_values do |value|
-        case value
-        when Date
-          value.to_s
-        when Array
-          value.join(' vs ')
-        when nil
-          ''
-        else
-          value
-        end
-      end
+      puts "Using cached data for team #{@team_id}"
+      games = $games_cache[@team_id]
     end
 
-    merged_game
-  end
-  $games_cache[@team_id] = tmp
+    cached_games = $games_cache[@team_id] || []
+    tmp = games.map do |game|
+      cached_game = cached_games.find { |cached_game| cached_game['link'] == game[:link] }
 
-  @team_name = if @team
-    "#{@team['name']} (#{ @team['age'] } #{ @team['gender'].chars.first })"
-  else
-    "Equipa não encontrada"
-  end
+      if cached_game
+        merged_game = cached_game.merge(game.transform_keys(&:to_s)) do |key, game_value, cached_value|
+          # Reject arrays and Date instances
+          if [game_value, cached_value].any? { |v| v.is_a?(Array) || v.is_a?(Date) }
+            next game_value # Keep the existing game value (or nil if it was nil)
+          end
 
-  erb :calendar
+          # Prefer non-nil and non-empty values
+          tmp_value = game_value.nil? || game_value == "" ? cached_value : game_value
+          tmp_value = '' if tmp_value.nil?
+          tmp_value
+        end
+      else
+        merged_game = game.transform_keys(&:to_s).transform_values do |value|
+          case value
+          when Date
+            value.to_s
+          when Array
+            value.join(' vs ')
+          when nil
+            ''
+          else
+            value
+          end
+        end
+      end
+      merged_game
+    end
+
+    $games_cache[@team_id] = tmp
+
+    @team_name = "#{@team['name']} (#{ @team['age'] } #{ @team['gender'].chars.first })"
+    @current_season = @team['season']
+    @last_updated = $games_cache_timestamps[@team_id]
+
+    # Set cache headers for browsers
+    cache_control :public, :must_revalidate, max_age: 3600 # Cache for 1 hour
+    last_modified @last_updated if @last_updated
+
+    erb :calendar
+
+  rescue StandardError => e
+    puts "Error fetching calendar data: #{e.message}"
+    status 500
+    @error_message = "Ocorreu um erro ao carregar os dados da equipa. Por favor, tente novamente mais tarde."
+    erb :error
+  end
 end
 
 get '/health' do
