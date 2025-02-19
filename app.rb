@@ -79,8 +79,8 @@ def load_games_csv_data(teams_cache)
 end
 
 # Load data once when the app starts
-$teams_cache = load_teams_csv_data
-$games_cache = load_games_csv_data($teams_cache)
+$teams_cache = []
+$games_cache = {}
 $games_cache_timestamps = {}
 
 # Homepage with the form

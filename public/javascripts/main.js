@@ -15,23 +15,20 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
   if (document.getElementById("team_url").value === "") {
-    console.log("button disabled");
     btn = document.getElementById("calendar-button");
     btn.disabled = true;
   } else {
-    console.log("button enabled");
     btn = document.getElementById("calendar-button");
     btn.disabled = false;
+    const teamId = document
+      .getElementById("team_url")
+      .value.split("/")
+      .pop()
+      .split("_")
+      .pop();
     btn.onclick = function (e) {
       e.preventDefault();
-      window.location.href =
-        "/calendar/" +
-        document
-          .getElementById("team_url")
-          .value.split("/")
-          .pop()
-          .split("_")
-          .pop();
+      window.location.href = "/calendar/" + teamId;
     };
   }
 });
@@ -53,7 +50,7 @@ document.addEventListener("alpine:init", () => {
     async init() {
       try {
         const cachedTeams = localStorage.getItem("teams");
-        if (cachedTeams) {
+        if (cachedTeams && cachedTeams.length > 0) {
           this.teams = JSON.parse(cachedTeams);
           this.filteredTeams = this.teams;
           document.getElementById("loading-screen").style.display = "none";
