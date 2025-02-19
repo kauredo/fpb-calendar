@@ -81,6 +81,7 @@ end
 # Load data once when the app starts
 $teams_cache = load_teams_csv_data
 $games_cache = load_games_csv_data($teams_cache)
+$games_cache_timestamps = {}
 
 # Homepage with the form
 get '/' do
@@ -89,7 +90,31 @@ end
 
 get '/calendar/:id' do
   @team = $teams_cache.find { |team| team['id'].to_i == params[:id].to_i }
-  @games = $games_cache[params[:id].to_i] || []
+  scraper = FpbScraper.new("https://www.fpb.pt/equipa/equipa_#{params[:id]}")
+  data = scraper.fetch_team_data(results: true)
+  games = data[:games]
+  cached_games = $games_cache[params[:id].to_i] || []
+  tmp = games.map do |game|
+    cached_game = cached_games.find { |cached_game| cached_game['link'] == game[:link] }
+
+    if cached_game
+      merged_game = cached_game.merge(game.transform_keys(&:to_s)) do |key, game_value, cached_value|
+        # Reject arrays and Date instances
+        if [game_value, cached_value].any? { |v| v.is_a?(Array) || v.is_a?(Date) }
+          next game_value # Keep the existing game value (or nil if it was nil)
+        end
+
+        # Prefer non-nil and non-empty values
+        game_value.nil? || game_value == "" ? cached_value : game_value
+      end
+    else
+      merged_game = game
+    end
+
+    merged_game
+  end
+  $games_cache[params[:id].to_i] = tmp
+
   @team_name = if @team
     "#{@team['name']} (#{ @team['age'] } #{ @team['gender'].chars.first })"
   else

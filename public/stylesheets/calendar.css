@@ -1520,8 +1520,13 @@
   color: #888888;
 }
 
-.game-details .result {
+.game-details .result,
+.game-details .time {
   font-weight: bold;
+}
+
+.game-details .time {
+  margin-top: 1rem;
 }
 
 .game-details .result.result--win {

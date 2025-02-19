@@ -70,13 +70,18 @@ document.addEventListener("DOMContentLoaded", function () {
                   <p class="competition">${game.competition}</p>
                   <p class="location">${game.location}</p>
                   ${
-                    game.result
-                      ? `<p class="result ${
-                          didWin ? "result--win" : "result--loss"
-                        }">${didWin ? "Vitória" : "Derrota"}: ${
-                          game.result
-                        }</p>`
-                      : `<p class="time">Hora: ${game.time}</p>`
+                    game.time &&
+                    game.time.length > 0 &&
+                    game.time != null &&
+                    `<p class="time">Hora: ${game.time}</p>`
+                  }
+                  ${
+                    game.result &&
+                    game.result.length > 0 &&
+                    game.result != null &&
+                    `<p class="result ${
+                      didWin ? "result--win" : "result--loss"
+                    }">${didWin ? "Vitória" : "Derrota"}: ${game.result}</p>`
                   }
                   ${
                     game.link
@@ -87,6 +92,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 gameEl.appendChild(gameTitle);
                 gameEl.appendChild(gameInfo);
+                gameEl.dataset.game = JSON.stringify(game);
                 popupContent.appendChild(gameEl);
               });
 
