@@ -102,13 +102,19 @@ document.addEventListener("DOMContentLoaded", function () {
                 existingPopup.remove();
               }
 
-              // Position and show the popup
-              const dayElement = e.target;
-              const rect = dayElement.getBoundingClientRect();
+              // Create overlay and modal logic
+              const overlay = document.createElement("div");
+              overlay.classList.add("games-overlay");
+              document.body.appendChild(overlay);
 
-              popupContent.style.position = "absolute";
-              popupContent.style.left = `${rect.left}px`;
-              popupContent.style.top = `${rect.bottom + window.scrollY}px`;
+              popupContent.classList.add("modal-popup");
+              overlay.classList.add("active");
+              popupContent.classList.add("active");
+
+              overlay.addEventListener("click", () => {
+                overlay.remove();
+                popupContent.remove();
+              });
 
               document.body.appendChild(popupContent);
 
@@ -116,9 +122,10 @@ document.addEventListener("DOMContentLoaded", function () {
               const closePopup = e => {
                 if (
                   !popupContent.contains(e.target) &&
-                  !dayElement.contains(e.target)
+                  !e.target.classList.contains("games-overlay")
                 ) {
                   popupContent.remove();
+                  overlay.remove();
                   document.removeEventListener("click", closePopup);
                 }
                 updateMarks(calendar, data.games);

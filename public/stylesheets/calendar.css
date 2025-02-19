@@ -1391,7 +1391,7 @@
 
 /* Calendar container styling */
 .vanilla-calendar {
-  max-width: 800px;
+  max-width: 600px;
   margin: 0 auto;
   background-color: white;
   border-radius: 8px;
@@ -1495,6 +1495,30 @@
   z-index: 1000;
 }
 
+.games-popup.modal-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 400px;
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  z-index: 1001;
+}
+
+.games-overlay.active {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
 .game-details {
   padding: 12px 0;
   border-bottom: 1px solid #f4f4f4;
@@ -1553,4 +1577,52 @@
 .vanilla-calendar-day--disabled {
   color: #ccc;
   cursor: not-allowed;
+}
+
+#calendar {
+  margin: 0 auto;
+  max-width: 600px;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .vanilla-calendar-week__day {
+    width: 30px; /* Adjust for better fit */
+    font-size: 12px;
+  }
+
+  /* Hide full text and replace with short versions using CSS content */
+  .vanilla-calendar-week__day:nth-child(1)::before {
+    content: "Sáb";
+  }
+  .vanilla-calendar-week__day:nth-child(2)::before {
+    content: "Dom";
+  }
+  .vanilla-calendar-week__day:nth-child(3)::before {
+    content: "Seg";
+  }
+  .vanilla-calendar-week__day:nth-child(4)::before {
+    content: "Ter";
+  }
+  .vanilla-calendar-week__day:nth-child(5)::before {
+    content: "Qua";
+  }
+  .vanilla-calendar-week__day:nth-child(6)::before {
+    content: "Qui";
+  }
+  .vanilla-calendar-week__day:nth-child(7)::before {
+    content: "Sex";
+  }
+
+  .vanilla-calendar-week__day {
+    text-indent: -9999px; /* Hide original text */
+    position: relative;
+  }
+
+  .vanilla-calendar-week__day::before {
+    text-indent: 0;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
 }
