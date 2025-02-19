@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calendário FPB: <%= @team['name'] %> (<%= @team['age'] %> <%= @team['gender'].chars.first %>)</title>
-    <meta name="description" content="Adiciona facilmente os jogos da <%= @team['name'] %> (<%= @team['age'] %> <%= @team['gender'].chars.first %>) ao teu calendário pessoal.">
+    <title>Calendário FPB: <%= @team_name %></title>
+    <meta name="description" content="Adiciona facilmente os jogos da <%= @team_name %> ao teu calendário pessoal.">
     <meta name="keywords" content="Calendário FPB, jogos basquetebol, Federação Portuguesa de Basquetebol, calendário Google, equipa basquetebol">
     <meta name="author" content="Vasco KF">
     <meta name="robots" content="index, follow">
@@ -13,16 +13,16 @@
     <meta name="google-site-verification" content="I1b2F2Y0JNu9CUcMiQJKBa_51op7tWkpfDRLPtWV8aQ" />
 
     <!-- Open Graph for social sharing -->
-    <meta property="og:title" content="Calendário FPB: <%= @team['name'] %> (<%= @team['age'] %> <%= @team['gender'].chars.first %>)">
-    <meta property="og:description" content="Adiciona facilmente os jogos da <%= @team['name'] %> (<%= @team['age'] %> <%= @team['gender'].chars.first %>) ao teu calendário pessoal.">
+    <meta property="og:title" content="Calendário FPB: <%= @team_name %>">
+    <meta property="og:description" content="Adiciona facilmente os jogos da <%= @team_name %> ao teu calendário pessoal.">
     <meta property="og:url" content="https://fpb-calendar.fly.dev/">
     <meta property="og:image" content="https://fpb-calendar.fly.dev/images/logo.png">
     <meta property="og:type" content="website">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Calendário FPB: <%= @team['name'] %> (<%= @team['age'] %> <%= @team['gender'].chars.first %>)">
-    <meta name="twitter:description" content="Adiciona facilmente os jogos da <%= @team['name'] %> (<%= @team['age'] %> <%= @team['gender'].chars.first %>) ao teu calendário pessoal.">
+    <meta name="twitter:title" content="Calendário FPB: <%= @team_name %>">
+    <meta name="twitter:description" content="Adiciona facilmente os jogos da <%= @team_name %> ao teu calendário pessoal.">
     <meta name="twitter:image" content="https://fpb-calendar.fly.dev/images/logo.png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,7 +45,7 @@
         <div class="spinner"></div>
       </div>
       <h1>Calendário FPB</h1>
-      <h2><%= @team['name'] %> (<%= @team['age'] %> <%= @team['gender'].chars.first %>)</h2>
+      <h2><%= @team_name %></h2>
       <div class="calendar-container">
         <div id="calendar"></div>
       </div>

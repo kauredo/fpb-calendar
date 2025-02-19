@@ -90,6 +90,11 @@ end
 get '/calendar/:id' do
   @team = $teams_cache.find { |team| team['id'].to_i == params[:id].to_i }
   @games = $games_cache[params[:id].to_i] || []
+  @team_name = if @team
+    "#{@team['name']} (#{ @team['age'] } #{ @team['gender'].chars.first })"
+  else
+    "Equipa não encontrada"
+  end
   erb :calendar
 end
 
