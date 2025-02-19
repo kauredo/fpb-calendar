@@ -17,5 +17,5 @@ jobs:
 
       - name: Trigger API Refresh
         run: |
-          sleep 30
+          sleep 10
           curl https://fpb-calendar.fly.dev/api/refresh || exit 1
