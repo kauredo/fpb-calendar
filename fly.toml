@@ -17,7 +17,7 @@ primary_region = 'arn'
   processes = ['app']
 
   [[http_service.checks]]
-    interval = "600s"    # Run health checks every 10 minutes
+    interval = "60s"    # Run health checks every 10 minutes
     timeout = "5s"       # Fail if no response in 2 seconds
     grace_period = "60s" # Wait 10 seconds after app starts before checking
     method = "GET"       # Use GET HTTP method
