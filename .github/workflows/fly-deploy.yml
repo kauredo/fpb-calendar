@@ -1,3 +1,5 @@
+# See https://fly.io/docs/app-guides/continuous-deployment-with-github-actions/
+
 name: Fly Deploy
 on:
   push:
@@ -14,8 +16,3 @@ jobs:
       - run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-
-      - name: Trigger API Refresh
-        run: |
-          sleep 10
-          curl https://fpb-calendar.fly.dev/api/refresh || exit 1

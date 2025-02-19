@@ -50,15 +50,24 @@ document.addEventListener("alpine:init", () => {
     async init() {
       try {
         const cachedTeams = localStorage.getItem("teams");
-        if (cachedTeams && cachedTeams.length > 0) {
+        if (cachedTeams && cachedTeams.length > 0 && cachedTeams !== "[]") {
           this.teams = JSON.parse(cachedTeams);
           this.filteredTeams = this.teams;
           document.getElementById("loading-screen").style.display = "none";
           return;
         }
 
-        const response = await fetch("/api/teams");
-        this.teams = await response.json();
+        const teamsResponse = await fetch("/api/teams");
+        let teams = await teamsResponse.json();
+
+        // If there are no teams, refresh the data
+        if (teams.length === 0) {
+          const fullResponse = await fetch("/api/refresh");
+          const data = await fullResponse.json();
+          teams = data.teams;
+        }
+
+        this.teams = teams;
         localStorage.setItem("teams", JSON.stringify(this.teams)); // Cache data
         this.filteredTeams = this.teams;
         document.getElementById("loading-screen").style.display = "none";

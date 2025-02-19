@@ -182,22 +182,25 @@ end
 
 # API endpoint to get teams
 get '/api/teams' do
+  puts "[GET] /api/teams"
   content_type :json
   $teams_cache.to_json
 end
 
 # Manually refresh the cache (only when needed)
 get '/api/refresh' do
+  puts "[GET] /api/refresh"
+  content_type :json
   $teams_cache = load_teams_csv_data
   $games_cache = load_games_csv_data($teams_cache)
   $games_cache_timestamps = {}
-  status 200
-  'Data refreshed'
+  { teams: $teams_cache, games: $games_cache }.to_json
 end
 
 get '/api/teams/:id' do
   content_type :json
   id = params[:id].to_i
+  puts "[GET] /api/teams/#{id}"
   team = $teams_cache.find { |team| team['id'].to_i == id }
   games = $games_cache[id] || []
   { team: team, games: games }.to_json
