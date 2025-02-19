@@ -7,4 +7,3 @@ encoded_google_credentials.txt
 .DS_Store
 log/*
 data/*.json
-data/games.csv
