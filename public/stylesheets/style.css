@@ -1,0 +1,342 @@
+* {
+  box-sizing: border-box;
+  transition: all 0.3s;
+}
+
+body {
+  font-family: "Roboto", sans-serif;
+  margin: 0;
+  padding: 0 10px;
+  background-color: #f4f4f4;
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+main {
+  flex-grow: 1;
+  width: 100%;
+}
+
+h1,
+h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 0;
+}
+
+h2 {
+  max-width: 600px;
+  font-size: 1.25em;
+  color: #888888;
+  margin: 0.5rem auto 1.5rem auto;
+}
+
+form,
+.container {
+  max-width: 600px;
+  margin: 1.5rem auto;
+  padding: 1.5rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+input,
+button,
+select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+label {
+  margin: 0;
+  margin-bottom: 0.5rem;
+  padding: 0;
+}
+
+button {
+  width: 100%;
+  background-color: #009d3d;
+  color: white;
+  cursor: pointer;
+  border: none;
+}
+
+button:hover {
+  background-color: #018232;
+}
+
+button:disabled {
+  background-color: #ccc !important;
+  color: #666 !important;
+  cursor: not-allowed !important;
+}
+
+#calendar-button {
+  margin-top: 0.5rem;
+  background-color: #f4f4f4;
+  color: #009d3d;
+}
+
+#calendar-button:hover {
+  background-color: #f0f0f0;
+}
+
+/* Loading screen */
+#loading-screen {
+  display: flex;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.7);
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #009d3d;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Dropdown styling */
+.dropdown {
+  margin: 1.5rem auto;
+  max-width: 600px;
+}
+
+.dropdown-toggle {
+  white-space: nowrap;
+  cursor: pointer;
+  width: min-content;
+  text-decoration: underline;
+  color: #555;
+}
+
+.dropdown-toggle::after {
+  content: "\2193";
+  margin-left: 5px;
+  text-decoration: none;
+}
+
+.dropdown.open .dropdown-toggle::after {
+  content: "\2191";
+}
+
+.dropdown.open .dropdown-content {
+  max-height: 600px;
+  padding: 15px;
+}
+
+.dropdown-content {
+  max-height: 0;
+  overflow: hidden;
+  max-width: 600px;
+  background-color: transparent;
+  border-left: 4px solid #009d3d;
+  padding: 0 15px;
+  margin: 1.5rem auto;
+  font-size: 0.9em;
+  color: #333;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  line-height: 1.25;
+}
+
+.dropdown-content p {
+  margin: 5px 0;
+}
+
+.dropdown-content a {
+  color: #009d3d;
+  text-decoration: none;
+}
+
+.dropdown-content a:hover {
+  text-decoration: underline;
+}
+
+/* Footer styling */
+.footer {
+  width: 100%;
+  text-align: center;
+  font-size: 0.8em;
+  color: #555;
+  padding: 10px;
+  margin-top: 15px;
+  border-top: 1px solid #ccc;
+}
+
+.footer a {
+  color: #009d3d;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
+/* Team selector styling */
+.filters-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.filter-item {
+  min-width: 45%;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.filter-item label {
+  margin-bottom: 0.5rem;
+}
+
+.filter-item select,
+.search-input {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  width: 100%;
+}
+
+.search-input:focus,
+.filter-item select:focus {
+  outline: none;
+  border-color: #009d3d;
+  box-shadow: 0 0 5px rgba(0, 157, 61, 0.3);
+}
+
+.teams-list {
+  margin-top: 1.5rem;
+}
+
+.teams-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.team-button {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+  color: #009d3d;
+}
+
+.team-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.team-details {
+  font-size: 0.9em; /* Optional: Make it slightly smaller */
+  color: #888888; /* Optional: Different color */
+}
+
+.team-button:hover {
+  background: #f0f0f0;
+  border-color: #009d3d;
+}
+
+.team-button.selected {
+  background: #009d3d;
+  color: white;
+  border-color: #018232;
+}
+
+.team-button.selected .team-details {
+  color: #f4f4f4;
+}
+
+/* Make the team URL input readonly and visually distinct */
+#team_url {
+  background-color: #f4f4f4;
+  cursor: not-allowed;
+}
+
+/* For the text search input */
+.search-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #009d3d;
+  box-shadow: 0 0 5px rgba(0, 157, 61, 0.3);
+}
+
+.team-details {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.game-card {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.game-date {
+  color: #666;
+  font-size: 0.9em;
+  margin-bottom: 10px;
+}
+
+.game-date .date {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.game-details h3 {
+  margin: 0 0 5px 0;
+  color: #333;
+}
+
+.game-details p {
+  margin: 5px 0;
+  color: #666;
+}

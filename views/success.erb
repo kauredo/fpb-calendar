@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendário Adicionado</title>
+    <meta name="robots" content="noindex, nofollow">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/stylesheets/style.css">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+  </head>
+  <body>
+    <main>
+    <h1>Convite Enviado!</h1>
+      <div class="container">
+        <p><%= @success_message %></p>
+        <p>Convite para: <%= @team_name %> enviado. Por favor verifica o teu email e aceita o convite do calendário, ou <a href="<%= @calendar_link %>">carrega aqui</a> para o abrir diretamente.</p>
+        <button onclick="window.location.href='/'">Voltar</button>
+      </div>
+    </main>
+    <footer class="footer">
+      <p>Nota: este projeto não é afiliado com <a href="https://www.fpb.pt/" target="_blank">Federação Portuguesa de Basquetebol</a> ou qualquer uma das suas entidades. É apenas um projeto pessoal.</p>
+      <p>Qualquer problema ou sugestão, por favor contacte-me <a href="mailto:vasco.kf@gmail.com">por email</a>. Obrigado.</p>
+    </footer>
+  </body>
+</html>

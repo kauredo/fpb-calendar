@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendário FPB: <%= @team_name %></title>
+    <meta name="description" content="Calendário de jogos da <%= @team_name %> para a época atual. Consulta datas, horários e locais dos jogos.">
+    <meta name="keywords" content="Calendário FPB, <%= @team_name %>, jogos basquetebol, Federação Portuguesa de Basquetebol, calendário Google">
+    <meta name="author" content="Vasco KF">
+    <meta name="robots" content="index, follow">
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://fpb-calendar.fly.dev/calendar/<%= @team_id %>">
+    <!-- Google Search Console verification -->
+    <meta name="google-site-verification" content="I1b2F2Y0JNu9CUcMiQJKBa_51op7tWkpfDRLPtWV8aQ" />
+
+    <!-- Open Graph for social sharing -->
+    <meta property="og:title" content="Calendário FPB: <%= @team_name %>">
+    <meta property="og:description" content="Calendário de jogos da <%= @team_name %> para a época atual. Consulta datas, horários e locais dos jogos.">
+    <meta property="og:url" content="https://fpb-calendar.fly.dev/calendar/<%= @team_id %>">
+    <meta property="og:image" content="https://fpb-calendar.fly.dev/images/logo.png">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Calendário FPB: <%= @team_name %>">
+    <meta name="twitter:description" content="Calendário de jogos da <%= @team_name %> para a época atual. Consulta datas, horários e locais dos jogos.">
+    <meta name="twitter:image" content="https://fpb-calendar.fly.dev/images/logo.png">
+
+    <!-- Schema.org markup for Google -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SportsTeam",
+      "name": "<%= @team_name %>",
+      "url": "https://fpb-calendar.fly.dev/calendar/<%= @team_id %>",
+      "description": "Calendário de jogos da <%= @team_name %> para a época atual."
+    }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@uvarov.frontend/vanilla-calendar/build/vanilla-calendar.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@uvarov.frontend/vanilla-calendar/build/vanilla-calendar.min.js"></script>
+
+    <link rel="stylesheet" href="/stylesheets/style.css">
+    <link rel="stylesheet" href="/stylesheets/calendar.css">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+  </head>
+  <body>
+    <main>
+      <div id="loading-screen">
+        <div class="spinner"></div>
+      </div>
+      <h1>Calendário FPB</h1>
+      <h2><%= @team_name %></h2>
+      <div id="calendar"></div>
+    </main>
+    <footer class="footer">
+      <p>Este projeto não é afiliado com <a href="https://www.fpb.pt/" target="_blank" rel="noreferrer noopener">Federação Portuguesa de Basquetebol</a> ou qualquer uma das suas entidades. É um projeto pessoal sem fins lucrativos.</p>
+      <p>Qualquer problema ou sugestão, por favor contacte-me <a href="mailto:vasco.kf@gmail.com">por email</a>. Obrigado.</p>
+    </footer>
+    <script src="/javascripts/calendar.js"></script>
+  </body>
+</html>

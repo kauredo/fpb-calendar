@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendário FPB</title>
+    <meta name="description" content="Adiciona facilmente os jogos da tua equipa de basquetebol favorita ao teu calendário pessoal.">
+    <meta name="keywords" content="Calendário FPB, jogos basquetebol, Federação Portuguesa de Basquetebol, calendário Google, equipa basquetebol">
+    <meta name="author" content="Vasco KF">
+    <meta name="robots" content="index, follow">
+
+    <!-- Google Search Console verification -->
+    <meta name="google-site-verification" content="I1b2F2Y0JNu9CUcMiQJKBa_51op7tWkpfDRLPtWV8aQ" />
+
+    <!-- Open Graph for social sharing -->
+    <meta property="og:title" content="Calendário FPB">
+    <meta property="og:description" content="Adiciona facilmente os jogos da tua equipa de basquetebol favorita ao teu calendário pessoal.">
+    <meta property="og:url" content="https://fpb-calendar.fly.dev/">
+    <meta property="og:image" content="https://fpb-calendar.fly.dev/images/logo.png">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Calendário FPB">
+    <meta name="twitter:description" content="Adiciona facilmente os jogos da tua equipa de basquetebol favorita ao teu calendário pessoal.">
+    <meta name="twitter:image" content="https://fpb-calendar.fly.dev/images/logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/stylesheets/style.css">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.10.2/cdn.min.js"></script>
+  </head>
+  <body>
+    <main>
+      <div id="loading-screen">
+        <div class="spinner"></div>
+      </div>
+      <h1>Calendário FPB</h1>
+      <h2>Adiciona facilmente os jogos da tua equipa de basquetebol favorita ao teu calendário pessoal.</h2>
+      <div x-data="teamSelector" x-init="init()">
+        <!-- Team Selection Interface -->
+        <div class="team-selector container">
+          <div class="filters-flex">
+            <div class="filter-item">
+              <label for="age">Escalão:</label>
+              <select id="age" x-model="filters.age" @change="updateFilters()">
+                <option value="">Todas</option>
+                <template x-for="value in getUniqueValues('age')" :key="value">
+                  <option x-text="value"></option>
+                </template>
+              </select>
+            </div>
+
+            <div class="filter-item">
+              <label for="gender">Género:</label>
+              <select id="gender" x-model="filters.gender" @change="updateFilters()">
+                <option value="">Todos</option>
+                <template x-for="value in getUniqueValues('gender')" :key="value">
+                  <option x-text="value"></option>
+                </template>
+              </select>
+            </div>
+
+            <div class="filter-item">
+              <label for="name">Nome da equipa:</label>
+              <input
+                type="text"
+                id="name"
+                x-model="filters.name"
+                @input="debounceUpdateFilters()"
+                placeholder="Pesquisar equipa"
+                class="search-input"
+              >
+            </div>
+          </div>
+
+          <div class="teams-list" x-show="filteredTeams.length > 0 && filteredTeams.length < 21">
+            <label>Seleciona a tua equipa:</label>
+            <div class="teams-grid">
+              <template x-for="team in filteredTeams" :key="team.id">
+                <button type="button" class="team-button"
+                        :class="{ 'selected': selectedTeam && selectedTeam.id === team.id }"
+                        @click="selectTeam(team)">
+                  <span x-text="team.name"></span>
+                  <span class="team-details" x-text="`(${team.age} ${team.gender.charAt(0)})`"></span>
+                </button>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <form id="invite-form" class="container" action="/invite" method="POST">
+          <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" name="email" id="email" required placeholder="Insere o teu email">
+          </div>
+
+          <div class="form-group">
+            <label for="team_url">URL de equipa:</label>
+            <input type="url" name="team_url" id="team_url" required readonly>
+          </div>
+
+          <button type="submit">Enviar Convite</button>
+          <button id="calendar-button" type="button" disabled="true">Ver Calendário</button>
+        </form>
+
+        <div class="dropdown">
+          <p class="dropdown-toggle">Modo de utilização</p>
+          <div class="dropdown-content">
+            <p>Este é um projeto pessoal que permite a subscrição de jogos de basquetebol da <a href="https://www.fpb.pt/" target="_blank" rel="noreferrer noopener">Federação Portuguesa de Basquetebol</a> diretamente no teu calendário pessoal.</p>
+            <p>Para começar, procura e seleciona a tua equipa de basquetebol favorita no formulário acima.</p>
+            <p>Repara que o campo <strong>URL de equipa</strong> é preenchido automaticamente com o URL da tua equipa.</p>
+            <p>Vais receber um email (com título <strong>invite</strong>) com um link para adicionar os jogos da equipa ao teu calendário.</p>
+            <p>Clica no link <strong>Add this calendar</strong>, de seguida serás redirecionado para a página de subscrição do Google Calendar.</p>
+            <p>Escolhe a tua conta Google e carrega em <strong>Adicionar</strong>. Parabéns, agora os jogos da tua equipa estão no teu calendário!</p>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer class="footer">
+      <p>Este projeto não é afiliado com <a href="https://www.fpb.pt/" target="_blank" rel="noreferrer noopener">Federação Portuguesa de Basquetebol</a> ou qualquer uma das suas entidades. É um projeto pessoal sem fins lucrativos.</p>
+      <p>Qualquer problema ou sugestão, por favor contacte-me <a href="mailto:vasco.kf@gmail.com">por email</a>. Obrigado.</p>
+    </footer>
+    <script src="/javascripts/main.js"></script>
+  </body>
+</html>

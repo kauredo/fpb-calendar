@@ -1,0 +1,10 @@
+# flyctl launch added from .gitignore
+**/*-calendar-*.json
+fly.toml
+.env
+tmp/*.json
+encoded_google_credentials.txt
+.DS_Store
+log/*
+data/*.json
+*copy.*
