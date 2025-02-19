@@ -89,11 +89,24 @@ get '/' do
 end
 
 get '/calendar/:id' do
-  @team = $teams_cache.find { |team| team['id'].to_i == params[:id].to_i }
-  scraper = FpbScraper.new("https://www.fpb.pt/equipa/equipa_#{params[:id]}")
-  data = scraper.fetch_team_data(results: true)
-  games = data[:games]
-  cached_games = $games_cache[params[:id].to_i] || []
+  team_id = params[:id].to_i
+  @team = $teams_cache.find { |team| team['id'].to_i == team_id }
+
+  # Check if data exists and if it's older than 1 hour
+  if !$games_cache[team_id] || Time.now - ($games_cache_timestamps[team_id] || Time.at(0)) > 3600 # 1 hour
+    puts "Scraping new data for team #{team_id}"
+    scraper = FpbScraper.new("https://www.fpb.pt/equipa/equipa_#{team_id}")
+    data = scraper.fetch_team_data(results: true)
+    games = data[:games]
+
+    # Update the cache timestamp
+    $games_cache_timestamps[team_id] = Time.now
+  else
+    puts "Using cached data for team #{team_id}"
+    games = $games_cache[team_id]
+  end
+
+  cached_games = $games_cache[team_id] || []
   tmp = games.map do |game|
     cached_game = cached_games.find { |cached_game| cached_game['link'] == game[:link] }
 
@@ -105,21 +118,36 @@ get '/calendar/:id' do
         end
 
         # Prefer non-nil and non-empty values
-        game_value.nil? || game_value == "" ? cached_value : game_value
+        tmp_value = game_value.nil? || game_value == "" ? cached_value : game_value
+        tmp_value = '' if tmp_value.nil?
+
+        tmp_value
       end
     else
-      merged_game = game
+      merged_game = game.transform_keys(&:to_s).transform_values do |value|
+        case value
+        when Date
+          value.to_s
+        when Array
+          value.join(' vs ')
+        when nil
+          ''
+        else
+          value
+        end
+      end
     end
 
     merged_game
   end
-  $games_cache[params[:id].to_i] = tmp
+  $games_cache[team_id] = tmp
 
   @team_name = if @team
     "#{@team['name']} (#{ @team['age'] } #{ @team['gender'].chars.first })"
   else
     "Equipa não encontrada"
   end
+
   erb :calendar
 end
 

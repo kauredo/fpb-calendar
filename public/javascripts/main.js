@@ -1,10 +1,5 @@
 // Show the loading screen when the form is submitted
 document.addEventListener("DOMContentLoaded", function () {
-  // if page is not root, hide loading screen
-  if (window.location.pathname !== "/") {
-    document.getElementById("loading-screen").style.display = "none";
-  }
-
   const form = document.getElementById("invite-form");
   if (form) {
     form.addEventListener("submit", function () {
@@ -18,6 +13,27 @@ document.addEventListener("DOMContentLoaded", function () {
       var dropdown = this.parentElement;
       dropdown.classList.toggle("open");
     });
+
+  if (document.getElementById("team_url").value === "") {
+    console.log("button disabled");
+    btn = document.getElementById("calendar-button");
+    btn.disabled = true;
+  } else {
+    console.log("button enabled");
+    btn = document.getElementById("calendar-button");
+    btn.disabled = false;
+    btn.onclick = function (e) {
+      e.preventDefault();
+      window.location.href =
+        "/calendar/" +
+        document
+          .getElementById("team_url")
+          .value.split("/")
+          .pop()
+          .split("_")
+          .pop();
+    };
+  }
 });
 
 // Register Alpine component
