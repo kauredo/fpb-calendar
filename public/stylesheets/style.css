@@ -31,7 +31,7 @@ h2 {
   max-width: 600px;
   font-size: 1.25em;
   color: #888888;
-  margin-top: 0.5rem;
+  margin: 0.5rem auto 1.5rem auto;
 }
 
 form,
@@ -128,7 +128,7 @@ button:disabled {
 /* Dropdown styling */
 .dropdown {
   margin: 1.5rem auto;
-  max-width: 540px;
+  max-width: 600px;
 }
 
 .dropdown-toggle {

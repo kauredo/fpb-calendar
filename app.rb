@@ -168,16 +168,35 @@ end
 # Dynamic sitemap generation
 get '/sitemap.xml' do
   content_type 'application/xml'
+
+  # Base URL of the site
+  base_url = "https://fpb-calendar.fly.dev"
+
+  # Create array of all URLs
   urls = [
-    "https://fpb-calendar.fly.dev/",
+    base_url, # Homepage
   ]
 
-  <<~XML
-    <?xml version="1.0" encoding="UTF-8"?>
-    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-      #{urls.map { |url| "<url><loc>#{url}</loc><lastmod>#{Time.now.utc.iso8601}</lastmod></url>" }.join}\n
-    </urlset>
-  XML
+  # Add all team calendar URLs
+  $teams_cache.each do |team|
+    urls << "#{base_url}/calendar/#{team['id']}"
+  end
+
+  # Generate sitemap XML
+  builder = ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+    "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">"]
+
+    urls.each do |url|
+    builder << "  <url>"
+    builder << "    <loc>#{url}</loc>"
+    builder << "    <lastmod>#{Time.now.utc.iso8601}</lastmod>"
+    builder << "    <changefreq>daily</changefreq>"
+    builder << "    <priority>#{url == base_url ? '1.0' : '0.8'}</priority>"
+    builder << "  </url>"
+  end
+
+  builder << "</urlset>"
+  builder.join("\n")
 end
 
 # API endpoint to get teams

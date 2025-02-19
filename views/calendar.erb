@@ -4,26 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendário FPB: <%= @team_name %></title>
-    <meta name="description" content="Adiciona facilmente os jogos da <%= @team_name %> ao teu calendário pessoal.">
-    <meta name="keywords" content="Calendário FPB, jogos basquetebol, Federação Portuguesa de Basquetebol, calendário Google, equipa basquetebol">
+    <meta name="description" content="Calendário de jogos da <%= @team_name %> para a época atual. Consulta datas, horários e locais dos jogos.">
+    <meta name="keywords" content="Calendário FPB, <%= @team_name %>, jogos basquetebol, Federação Portuguesa de Basquetebol, calendário Google">
     <meta name="author" content="Vasco KF">
     <meta name="robots" content="index, follow">
-
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://fpb-calendar.fly.dev/calendar/<%= @team['id'] %>">
     <!-- Google Search Console verification -->
     <meta name="google-site-verification" content="I1b2F2Y0JNu9CUcMiQJKBa_51op7tWkpfDRLPtWV8aQ" />
 
     <!-- Open Graph for social sharing -->
     <meta property="og:title" content="Calendário FPB: <%= @team_name %>">
-    <meta property="og:description" content="Adiciona facilmente os jogos da <%= @team_name %> ao teu calendário pessoal.">
-    <meta property="og:url" content="https://fpb-calendar.fly.dev/">
+    <meta property="og:description" content="Calendário de jogos da <%= @team_name %> para a época atual. Consulta datas, horários e locais dos jogos.">
+    <meta property="og:url" content="https://fpb-calendar.fly.dev/calendar/<%= @team['id'] %>">
     <meta property="og:image" content="https://fpb-calendar.fly.dev/images/logo.png">
     <meta property="og:type" content="website">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Calendário FPB: <%= @team_name %>">
-    <meta name="twitter:description" content="Adiciona facilmente os jogos da <%= @team_name %> ao teu calendário pessoal.">
+    <meta name="twitter:description" content="Calendário de jogos da <%= @team_name %> para a época atual. Consulta datas, horários e locais dos jogos.">
     <meta name="twitter:image" content="https://fpb-calendar.fly.dev/images/logo.png">
+
+    <!-- Schema.org markup for Google -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SportsTeam",
+      "name": "<%= @team_name %>",
+      "url": "https://fpb-calendar.fly.dev/calendar/<%= @team['id'] %>",
+      "description": "Calendário de jogos da <%= @team_name %> para a época atual."
+    }
+    </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
