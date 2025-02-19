@@ -190,6 +190,7 @@ end
 get '/api/refresh' do
   $teams_cache = load_teams_csv_data
   $games_cache = load_games_csv_data($teams_cache)
+  $games_cache_timestamps = {}
   status 200
   'Data refreshed'
 end
