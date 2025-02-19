@@ -79,8 +79,8 @@ def load_games_csv_data(teams_cache)
 end
 
 # Load data once when the app starts
-$teams_cache = []
-$games_cache = {}
+$teams_cache = ENV['APP_ENV'] == 'production' ? [] : load_teams_csv_data
+$games_cache = ENV['APP_ENV'] == 'production' ? {} : load_games_csv_data($teams_cache)
 $games_cache_timestamps = {}
 
 # Homepage with the form
@@ -89,24 +89,24 @@ get '/' do
 end
 
 get '/calendar/:id' do
-  team_id = params[:id].to_i
-  @team = $teams_cache.find { |team| team['id'].to_i == team_id }
+  @team_id = params[:id].to_i
+  @team = $teams_cache.find { |team| team['id'].to_i == @team_id }
 
   # Check if data exists and if it's older than 1 hour
-  if !$games_cache[team_id] || Time.now - ($games_cache_timestamps[team_id] || Time.at(0)) > ENV['CACHE_EXPIRATION'].to_i
-    puts "Scraping new data for team #{team_id}"
-    scraper = FpbScraper.new("https://www.fpb.pt/equipa/equipa_#{team_id}")
+  if !$games_cache[@team_id] || Time.now - ($games_cache_timestamps[@team_id] || Time.at(0)) > ENV['CACHE_EXPIRATION'].to_i
+    puts "Scraping new data for team #{@team_id}"
+    scraper = FpbScraper.new("https://www.fpb.pt/equipa/equipa_#{@team_id}")
     data = scraper.fetch_team_data(results: true)
     games = data[:games]
 
     # Update the cache timestamp
-    $games_cache_timestamps[team_id] = Time.now
+    $games_cache_timestamps[@team_id] = Time.now
   else
-    puts "Using cached data for team #{team_id}"
-    games = $games_cache[team_id]
+    puts "Using cached data for team #{@team_id}"
+    games = $games_cache[@team_id]
   end
 
-  cached_games = $games_cache[team_id] || []
+  cached_games = $games_cache[@team_id] || []
   tmp = games.map do |game|
     cached_game = cached_games.find { |cached_game| cached_game['link'] == game[:link] }
 
@@ -140,7 +140,7 @@ get '/calendar/:id' do
 
     merged_game
   end
-  $games_cache[team_id] = tmp
+  $games_cache[@team_id] = tmp
 
   @team_name = if @team
     "#{@team['name']} (#{ @team['age'] } #{ @team['gender'].chars.first })"

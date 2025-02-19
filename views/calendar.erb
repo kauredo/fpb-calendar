@@ -9,14 +9,14 @@
     <meta name="author" content="Vasco KF">
     <meta name="robots" content="index, follow">
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://fpb-calendar.fly.dev/calendar/<%= @team['id'] %>">
+    <link rel="canonical" href="https://fpb-calendar.fly.dev/calendar/<%= @team_id %>">
     <!-- Google Search Console verification -->
     <meta name="google-site-verification" content="I1b2F2Y0JNu9CUcMiQJKBa_51op7tWkpfDRLPtWV8aQ" />
 
     <!-- Open Graph for social sharing -->
     <meta property="og:title" content="Calendário FPB: <%= @team_name %>">
     <meta property="og:description" content="Calendário de jogos da <%= @team_name %> para a época atual. Consulta datas, horários e locais dos jogos.">
-    <meta property="og:url" content="https://fpb-calendar.fly.dev/calendar/<%= @team['id'] %>">
+    <meta property="og:url" content="https://fpb-calendar.fly.dev/calendar/<%= @team_id %>">
     <meta property="og:image" content="https://fpb-calendar.fly.dev/images/logo.png">
     <meta property="og:type" content="website">
 
@@ -32,7 +32,7 @@
       "@context": "https://schema.org",
       "@type": "SportsTeam",
       "name": "<%= @team_name %>",
-      "url": "https://fpb-calendar.fly.dev/calendar/<%= @team['id'] %>",
+      "url": "https://fpb-calendar.fly.dev/calendar/<%= @team_id %>",
       "description": "Calendário de jogos da <%= @team_name %> para a época atual."
     }
     </script>
