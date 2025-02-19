@@ -49,8 +49,6 @@ document.addEventListener("alpine:init", () => {
         localStorage.setItem("teams", JSON.stringify(this.teams)); // Cache data
         this.filteredTeams = this.teams;
         document.getElementById("loading-screen").style.display = "none";
-        // console.log("Teams loaded:", this.teams.length);
-        // console.log("Sample team:", this.teams[0]);
       } catch (error) {
         console.error("Error loading teams:", error);
       }
@@ -66,8 +64,6 @@ document.addEventListener("alpine:init", () => {
           );
         });
       });
-
-      // console.log("Filtered teams:", this.filteredTeams.length);
     },
 
     debounceUpdateFilters() {

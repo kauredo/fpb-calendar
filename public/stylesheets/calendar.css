@@ -567,7 +567,7 @@
 }
 [data-calendar-theme="light"] .vanilla-calendar-month:hover,
 [data-calendar-theme="light"] .vanilla-calendar-year:hover {
-  color: #64748b;
+  color: #ffffff;
 }
 [data-calendar-theme="light"]
   .vanilla-calendar-month.vanilla-calendar-month_not-active,
@@ -1389,6 +1389,7 @@
   background-color: rgb(71 85 105 / var(--tw-bg-opacity));
 }
 
+/* Calendar container styling */
 .vanilla-calendar {
   max-width: 800px;
   margin: 0 auto;
@@ -1401,9 +1402,6 @@
 
 /* Header styling */
 .vanilla-calendar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   margin-bottom: 20px;
 }
 
@@ -1444,23 +1442,42 @@
 .vanilla-calendar-days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
 }
 
 .vanilla-calendar-day {
-  padding: 10px;
   text-align: center;
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.3s;
-  position: relative;
 }
 
-/* Today's date */
-.vanilla-calendar-day_today {
+/* Today's day */
+.vanilla-calendar-day__btn_today {
   background-color: #f4f4f4;
-  color: #009d3d;
   font-weight: bold;
+  color: #009d3d;
+}
+
+/* days with events */
+.has-game {
+  position: relative;
+  background-color: rgba(0, 157, 61, 0.1) !important;
+}
+
+.has-game::after {
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #009d3d;
+}
+
+.has-multiple-games::after {
+  background-color: #018232;
 }
 
 /* Hover states */
@@ -1475,6 +1492,7 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   padding: 15px;
   max-width: 300px;
+  z-index: 1000;
 }
 
 .game-details {
@@ -1503,8 +1521,15 @@
 }
 
 .game-details .result {
-  color: #009d3d;
   font-weight: bold;
+}
+
+.game-details .result.result--win {
+  color: #009d3d;
+}
+
+.game-details .result.result--loss {
+  color: #bc0000;
 }
 
 .game-details a {
@@ -1519,18 +1544,8 @@
   text-decoration: underline;
 }
 
-/* Disabled dates */
-.vanilla-calendar-day_disabled {
+/* Disabled days */
+.vanilla-calendar-day--disabled {
   color: #ccc;
   cursor: not-allowed;
-}
-
-/* Popup positioning */
-.vanilla-calendar-popup {
-  z-index: 1000;
-}
-
-/* Marker styling */
-.vanilla-calendar-day_marked {
-  background-color: rgba(0, 157, 61, 0.1);
 }

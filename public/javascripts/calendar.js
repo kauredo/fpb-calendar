@@ -35,7 +35,10 @@ document.addEventListener("DOMContentLoaded", function () {
             const gamesOnDay = data.games.filter(
               game => game.date === clickedDate
             );
-
+            updateMarks(calendar, data.games, clickedDate);
+            setTimeout(() => {
+              updateMarks(calendar, data.games, clickedDate);
+            }, 0);
             if (gamesOnDay.length > 0) {
               const popupContent = document.createElement("div");
               popupContent.className = "games-popup";
@@ -48,12 +51,31 @@ document.addEventListener("DOMContentLoaded", function () {
                 gameTitle.textContent = game.teams;
 
                 const gameInfo = document.createElement("div");
+
+                const [homeTeam, awayTeam] = game.teams.split(" vs ");
+                const isHomeTeam = homeTeam === game.name;
+
+                let teamScore = null;
+                let opponentScore = null;
+                let didWin = null;
+
+                if (game.result) {
+                  const [score1, score2] = game.result.split("-").map(Number);
+                  teamScore = isHomeTeam ? score1 : score2;
+                  opponentScore = isHomeTeam ? score2 : score1;
+                  didWin = teamScore > opponentScore;
+                }
+
                 gameInfo.innerHTML = `
                   <p class="competition">${game.competition}</p>
                   <p class="location">${game.location}</p>
                   ${
                     game.result
-                      ? `<p class="result">Resultado: ${game.result}</p>`
+                      ? `<p class="result ${
+                          didWin ? "result--win" : "result--loss"
+                        }">${didWin ? "Vitória" : "Derrota"}: ${
+                          game.result
+                        }</p>`
                       : `<p class="time">Hora: ${game.time}</p>`
                   }
                   ${
@@ -83,7 +105,6 @@ document.addEventListener("DOMContentLoaded", function () {
               popupContent.style.top = `${rect.bottom + window.scrollY}px`;
 
               document.body.appendChild(popupContent);
-              updateMarks(calendar, data.games);
 
               // Close popup when clicking outside
               const closePopup = e => {
@@ -100,21 +121,26 @@ document.addEventListener("DOMContentLoaded", function () {
               // Delay adding the event listener to prevent immediate closure
               setTimeout(() => {
                 document.addEventListener("click", closePopup);
-                updateMarks(calendar, data.games);
               }, 0);
             }
           },
           clickArrow(e) {
             updateMarks(calendar, data.games);
           },
+          clickMonth(e) {
+            setTimeout(() => {
+              updateMarks(calendar, data.games);
+            }, 0);
+          },
+          clickYear(e) {
+            setTimeout(() => {
+              updateMarks(calendar, data.games);
+            }, 0);
+          },
         },
       });
 
-      function updateMarks(calendar, games) {
-        console.log("Updating marks", calendar);
-        const currentMonth = calendar.selectedMonth;
-        const currentYear = calendar.selectedYear;
-
+      function updateMarks(calendar, games, clickedDate = "") {
         // Get all date elements
         const dateElements = calendar.HTMLElement.querySelectorAll(
           ".vanilla-calendar-day__btn"
@@ -131,7 +157,7 @@ document.addEventListener("DOMContentLoaded", function () {
           const date = dateEl.dataset.calendarDay;
           const gamesOnDay = games.filter(game => game.date === date);
 
-          if (gamesOnDay.length > 0) {
+          if (gamesOnDay.length > 0 && clickedDate !== date) {
             dateEl.classList.add("has-game");
             dateEl.setAttribute("data-game-count", gamesOnDay.length);
 
