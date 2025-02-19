@@ -1587,42 +1587,7 @@
 
 @media (max-width: 768px) {
   .vanilla-calendar-week__day {
-    width: 30px; /* Adjust for better fit */
+    width: 30px;
     font-size: 12px;
-  }
-
-  /* Hide full text and replace with short versions using CSS content */
-  .vanilla-calendar-week__day:nth-child(1)::before {
-    content: "Sáb";
-  }
-  .vanilla-calendar-week__day:nth-child(2)::before {
-    content: "Dom";
-  }
-  .vanilla-calendar-week__day:nth-child(3)::before {
-    content: "Seg";
-  }
-  .vanilla-calendar-week__day:nth-child(4)::before {
-    content: "Ter";
-  }
-  .vanilla-calendar-week__day:nth-child(5)::before {
-    content: "Qua";
-  }
-  .vanilla-calendar-week__day:nth-child(6)::before {
-    content: "Qui";
-  }
-  .vanilla-calendar-week__day:nth-child(7)::before {
-    content: "Sex";
-  }
-
-  .vanilla-calendar-week__day {
-    text-indent: -9999px; /* Hide original text */
-    position: relative;
-  }
-
-  .vanilla-calendar-week__day::before {
-    text-indent: 0;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
   }
 }
