@@ -15,6 +15,11 @@ body {
   justify-content: space-between;
 }
 
+main {
+  flex-grow: 1;
+  width: 100%;
+}
+
 h1,
 h2 {
   text-align: center;
@@ -299,12 +304,6 @@ button:disabled {
   outline: none;
   border-color: #009d3d;
   box-shadow: 0 0 5px rgba(0, 157, 61, 0.3);
-}
-
-.calendar-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
 }
 
 .team-details {
