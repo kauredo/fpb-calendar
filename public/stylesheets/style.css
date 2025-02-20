@@ -289,7 +289,9 @@ button:disabled {
 /* Make the team URL input readonly and visually distinct */
 #team_url {
   background-color: #f4f4f4;
-  cursor: not-allowed;
+  color: #009d3d;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 /* For the text search input */

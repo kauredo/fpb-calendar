@@ -7,6 +7,20 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  const teamUrl = document.getElementById("team_url");
+  if (teamUrl) {
+    if (teamUrl.value !== "") {
+      teamUrl.style.cursor = "pointer";
+      teamUrl.addEventListener("click", function () {
+        const newWindow = window.open(this.value, "_blank");
+        newWindow.opener = null;
+        newWindow.focus();
+      });
+    } else {
+      teamUrl.style.cursor = "not-allowed";
+    }
+  }
+
   document
     .querySelector(".dropdown-toggle")
     .addEventListener("click", function () {
@@ -110,7 +124,14 @@ document.addEventListener("alpine:init", () => {
 
     selectTeam(team) {
       this.selectedTeam = team;
-      document.getElementById("team_url").value = team.url;
+      const teamUrl = document.getElementById("team_url");
+      teamUrl.value = team.url;
+      teamUrl.style.cursor = "pointer";
+      teamUrl.addEventListener("click", function () {
+        const newWindow = window.open(team.url, "_blank");
+        newWindow.opener = null;
+        newWindow.focus();
+      });
       // make button not disabled and redirect to /calendar/id
       btn = document.getElementById("calendar-button");
       btn.disabled = false;
