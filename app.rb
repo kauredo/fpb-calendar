@@ -106,6 +106,8 @@ get '/calendar/:id' do
       scraper = FpbScraper.new("https://www.fpb.pt/equipa/equipa_#{@team_id}")
       data = scraper.fetch_team_data(results: true)
       games = data[:games]
+      # Store the data in the cache
+      $games_cache[@team_id] = games
       # Update the cache timestamp
       $games_cache_timestamps[@team_id] = Time.now
     else
