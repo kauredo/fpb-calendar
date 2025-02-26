@@ -89,7 +89,6 @@ end
 get '/calendar/:id' do
   @team_id = params[:id].to_i
   @team = $teams_cache.find { |team| team['id'].to_i == @team_id }
-
   # Return 404 if team not found
   unless @team
     status 404
@@ -100,19 +99,22 @@ get '/calendar/:id' do
   begin
     # Check if data exists and if it's older than the expiration time
     cache_expiration = ENV['CACHE_EXPIRATION'].to_i || 3600 # Default to 1 hour if not set
-    if !$games_cache[@team_id] || Time.now - ($games_cache_timestamps[@team_id] || Time.at(0)) > cache_expiration
+
+    # Use the timestamp from the cache object itself, not a separate hash
+    if !$games_cache.has_key?(@team_id) ||
+       Time.now - ($games_cache.timestamp(@team_id) || Time.at(0)) > cache_expiration
       puts "Getting fresh data for team #{@team_id}"
 
-      # First, load games from CSV if not already cached
+      # Load CSV games for this team
       csv_games = load_games_for_team(@team_id)
 
-      # Then scrape web data for the latest info
+      # Then scrape web data
       scraper = FpbScraper.new("https://www.fpb.pt/equipa/equipa_#{@team_id}")
       data = scraper.fetch_team_data(results: true)
       scraped_games = data[:games]
 
       # Combine scraped games with CSV games
-      games = scraped_games
+      games = scraped_games.dup
 
       # Add CSV games that aren't in scraped games
       csv_games.each do |csv_game|
@@ -125,63 +127,58 @@ get '/calendar/:id' do
         games << symbolized_game
       end
 
-      # Store the data in the cache
-      $games_cache[@team_id] = games
-      # Update the cache timestamp
-      $games_cache_timestamps[@team_id] = Time.now
-    else
-      puts "Using cached data for team #{@team_id}"
-      games = $games_cache[@team_id]
-    end
+      # Get any existing cached games
+      cached_games = $games_cache[@team_id] || []
 
-    cached_games = $games_cache[@team_id] || []
+      # Process and transform games
+      merged_games = games.map do |game|
+        # Look for matching game in the cache
+        cached_game = cached_games.find { |cg| cg['link'] == game[:link] }
 
-    tmp = games.map do |game|
-      # Look for a matching game in the cache
-      cached_game = cached_games.find { |cg| cg['link'] == game[:link] }
+        merged_game = if cached_game
+                        # Merge with existing cached game
+                        cached_game.merge(game.transform_keys(&:to_s)) do |_key, game_value, cached_value|
+                          # Reject arrays and Date instances
+                          if [game_value, cached_value].any? { |v| v.is_a?(Array) || v.is_a?(Date) }
+                            next game_value # Keep the existing game value
+                          end
 
-      merged_game = if cached_game
-                      # Merge with existing cached game
-                      cached_game.merge(game.transform_keys(&:to_s)) do |_key, game_value, cached_value|
-                        # Reject arrays and Date instances
-                        if [game_value, cached_value].any? { |v| v.is_a?(Array) || v.is_a?(Date) }
-                          next game_value # Keep the existing game value (or nil if it was nil)
+                          # Prefer non-nil and non-empty values
+                          tmp_value = game_value.nil? || game_value == '' ? cached_value : game_value
+                          tmp_value = '' if tmp_value.nil?
+                          tmp_value
                         end
-
-                        # Prefer non-nil and non-empty values
-                        tmp_value = game_value.nil? || game_value == '' ? cached_value : game_value
-                        tmp_value = '' if tmp_value.nil?
-                        tmp_value
-                      end
-                    else
-                      # Transform new game
-                      game.transform_keys(&:to_s).transform_values do |value|
-                        case value
-                        when Date
-                          value.to_s
-                        when Array
-                          value.join(' vs ')
-                        when nil
-                          ''
-                        else
-                          value
+                      else
+                        # Transform new game
+                        game.transform_keys(&:to_s).transform_values do |value|
+                          case value
+                          when Date
+                            value.to_s
+                          when Array
+                            value.join(' vs ')
+                          when nil
+                            ''
+                          else
+                            value
+                          end
                         end
                       end
-                    end
 
-      merged_game
+        merged_game
+      end
+
+      # Store in cache once (not twice)
+      $games_cache[@team_id] = merged_games
+      # No need to update timestamp separately - it's handled in the cache class
     end
-
-    $games_cache[@team_id] = tmp
 
     @team_name = "#{@team['name']} (#{@team['age']} #{@team['gender'].chars.first})"
     @current_season = @team['season']
-    @last_updated = $games_cache_timestamps[@team_id]
+    @last_updated = $games_cache.timestamp(@team_id)
 
     # Set cache headers for browsers
     cache_control :public, :must_revalidate, max_age: 3600 # Cache for 1 hour
     last_modified @last_updated if @last_updated
-
     erb :calendar
   rescue StandardError => e
     puts "Error fetching calendar data: #{e.message}"
@@ -252,11 +249,12 @@ get '/api/refresh' do
   content_type :json
   $teams_cache = load_teams_csv_data
   $games_cache = MemoryBoundCache.new(30) # Reset the games cache
-  $games_cache_timestamps = {}
+
   {
-    teams_count: $teams_cache.size,
+    memory_usage_mb: `ps -o rss= -p #{Process.pid}`.to_i / 1024,
     games_cache_size: $games_cache.size,
-    memory_usage_mb: `ps -o rss= -p #{Process.pid}`.to_i / 1024 # Add memory usage info
+    games_cache_keys: $games_cache.keys,
+    teams_count: $teams_cache.size
   }.to_json
 end
 
@@ -267,10 +265,7 @@ get '/api/teams/:id' do
   team = $teams_cache.find { |cached_team| cached_team['id'].to_i == id }
 
   # Load games on demand if needed
-  unless $games_cache[id]
-    $games_cache[id] = load_games_for_team(id)
-    $games_cache_timestamps[id] = Time.now
-  end
+  $games_cache[id] = load_games_for_team(id) unless $games_cache[id]
 
   games = $games_cache[id] || []
   { team: team, games: games }.to_json
