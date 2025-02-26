@@ -12,4 +12,5 @@ gem 'sinatra'
 
 group :development do
   gem 'pry' # For debugging
+  gem 'rubocop' # Linting
 end

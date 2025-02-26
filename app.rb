@@ -3,16 +3,17 @@ require 'rack/attack'
 require 'csv'
 require 'pry'
 require_relative 'fpb_calendar'
+require_relative 'lib/memory_bound_cache'
 use Rack::Attack
 
 set :port, ENV['PORT'] || 4567
 set :bind, '0.0.0.0'
 set :hosts, ['fpb-calendar.fly.dev', 'localhost'] # Sinatra will enforce allowed hosts
-set :protection, :except => :host # Disable Rack::Protection HostAuthorization
+set :protection, except: :host # Disable Rack::Protection HostAuthorization
 
-TEAM_HEADERS = %w[id name age gender season url]
-GAME_HEADERS = %w[name age gender date time teams result location competition season link]
-EXCLUDED_TERMS = Set.new(["venc", "º", "designar", "3x3"]) # Precompute excluded terms for faster lookup
+TEAM_HEADERS = %w[id name age gender season url].freeze
+GAME_HEADERS = %w[name age gender date time teams result location competition season link].freeze
+EXCLUDED_TERMS = Set.new(%w[venc º designar 3x3]) # Precompute excluded terms for faster lookup
 
 def load_teams_csv_data
   # Check if season is current or previous
@@ -32,55 +33,52 @@ def load_teams_csv_data
     team = TEAM_HEADERS.zip(row).to_h
 
     # Use Set lookup instead of array iteration
-    next if EXCLUDED_TERMS.any? { |term| team["name"].to_s.downcase.include?(term) }
+    next if EXCLUDED_TERMS.any? { |term| team['name'].to_s.downcase.include?(term) }
 
     # Simple season check
-    valid_season = team["season"] == current_season || (extra_season && team["season"] == extra_season)
+    valid_season = team['season'] == current_season || (extra_season && team['season'] == extra_season)
 
     teams << team if valid_season
   end
   teams
 end
 
-def load_games_csv_data(teams_cache)
-  games_by_team = {}
+# Load games for a specific team only
+def load_games_for_team(team_id)
+  team = $teams_cache.find { |t| t['id'].to_i == team_id.to_i }
+  return [] unless team
 
-  # Create efficient lookup hash for teams
-  teams_lookup = teams_cache.group_by { |team|
-    [
-      team["name"].downcase,
-      team["age"].downcase,
-      team["gender"].downcase,
-      team["season"].downcase
-    ].join("\0")
-  }
+  # Create lookup info for this team
+  team_lookup = [
+    team['name'].downcase,
+    team['age'].downcase,
+    team['gender'].downcase,
+    team['season'].downcase
+  ].join("\0")
 
+  games = []
   CSV.foreach('data/games.csv', col_sep: ';') do |row|
     game = GAME_HEADERS.zip(row).to_h
 
-    # Create quick lookup key
-    lookup_key = [
-      game["name"].downcase,
-      game["age"].downcase,
-      game["gender"].downcase,
-      game["season"].downcase
+    # Create quick lookup key for this game
+    game_lookup = [
+      game['name'].downcase,
+      game['age'].downcase,
+      game['gender'].downcase,
+      game['season'].downcase
     ].join("\0")
 
-    # Find matching teams efficiently
-    matching_teams = teams_lookup[lookup_key]
-    next unless matching_teams
-
-    matching_teams.each do |team|
-      (games_by_team[team["id"].to_i] ||= []) << game
-    end
+    # Add to games if it matches
+    games << game if game_lookup == team_lookup
   end
 
-  games_by_team
+  games
 end
 
-# Load data once when the app starts
+# Load teams data at startup (required for API/UI)
 $teams_cache = load_teams_csv_data
-$games_cache = load_games_csv_data($teams_cache)
+# Use memory-bound cache for games instead of loading all at once
+$games_cache = MemoryBoundCache.new(30) # Limit to 30 teams' worth of games
 $games_cache_timestamps = {}
 
 # Homepage with the form
@@ -95,17 +93,38 @@ get '/calendar/:id' do
   # Return 404 if team not found
   unless @team
     status 404
-    @team_name = "Equipa não encontrada"
+    @team_name = 'Equipa não encontrada'
     return erb :error
   end
 
   begin
-    # Check if data exists and if it's older than 1 hour
-    if !$games_cache[@team_id] || Time.now - ($games_cache_timestamps[@team_id] || Time.at(0)) > ENV['CACHE_EXPIRATION'].to_i
-      puts "Scraping new data for team #{@team_id}"
+    # Check if data exists and if it's older than the expiration time
+    cache_expiration = ENV['CACHE_EXPIRATION'].to_i || 3600 # Default to 1 hour if not set
+    if !$games_cache[@team_id] || Time.now - ($games_cache_timestamps[@team_id] || Time.at(0)) > cache_expiration
+      puts "Getting fresh data for team #{@team_id}"
+
+      # First, load games from CSV if not already cached
+      csv_games = load_games_for_team(@team_id)
+
+      # Then scrape web data for the latest info
       scraper = FpbScraper.new("https://www.fpb.pt/equipa/equipa_#{@team_id}")
       data = scraper.fetch_team_data(results: true)
-      games = data[:games]
+      scraped_games = data[:games]
+
+      # Combine scraped games with CSV games
+      games = scraped_games
+
+      # Add CSV games that aren't in scraped games
+      csv_games.each do |csv_game|
+        csv_game = csv_game.transform_keys(&:to_s)
+        next if games.any? { |g| g[:link] == csv_game['link'] }
+
+        # Convert string keys to symbols to match scraped games format
+        symbolized_game = {}
+        csv_game.each { |k, v| symbolized_game[k.to_sym] = v }
+        games << symbolized_game
+      end
+
       # Store the data in the cache
       $games_cache[@team_id] = games
       # Update the cache timestamp
@@ -116,41 +135,46 @@ get '/calendar/:id' do
     end
 
     cached_games = $games_cache[@team_id] || []
+
     tmp = games.map do |game|
-      cached_game = cached_games.find { |cached_game| cached_game['link'] == game[:link] }
+      # Look for a matching game in the cache
+      cached_game = cached_games.find { |cg| cg['link'] == game[:link] }
 
-      if cached_game
-        merged_game = cached_game.merge(game.transform_keys(&:to_s)) do |key, game_value, cached_value|
-          # Reject arrays and Date instances
-          if [game_value, cached_value].any? { |v| v.is_a?(Array) || v.is_a?(Date) }
-            next game_value # Keep the existing game value (or nil if it was nil)
-          end
+      merged_game = if cached_game
+                      # Merge with existing cached game
+                      cached_game.merge(game.transform_keys(&:to_s)) do |_key, game_value, cached_value|
+                        # Reject arrays and Date instances
+                        if [game_value, cached_value].any? { |v| v.is_a?(Array) || v.is_a?(Date) }
+                          next game_value # Keep the existing game value (or nil if it was nil)
+                        end
 
-          # Prefer non-nil and non-empty values
-          tmp_value = game_value.nil? || game_value == "" ? cached_value : game_value
-          tmp_value = '' if tmp_value.nil?
-          tmp_value
-        end
-      else
-        merged_game = game.transform_keys(&:to_s).transform_values do |value|
-          case value
-          when Date
-            value.to_s
-          when Array
-            value.join(' vs ')
-          when nil
-            ''
-          else
-            value
-          end
-        end
-      end
+                        # Prefer non-nil and non-empty values
+                        tmp_value = game_value.nil? || game_value == '' ? cached_value : game_value
+                        tmp_value = '' if tmp_value.nil?
+                        tmp_value
+                      end
+                    else
+                      # Transform new game
+                      game.transform_keys(&:to_s).transform_values do |value|
+                        case value
+                        when Date
+                          value.to_s
+                        when Array
+                          value.join(' vs ')
+                        when nil
+                          ''
+                        else
+                          value
+                        end
+                      end
+                    end
+
       merged_game
     end
 
     $games_cache[@team_id] = tmp
 
-    @team_name = "#{@team['name']} (#{ @team['age'] } #{ @team['gender'].chars.first })"
+    @team_name = "#{@team['name']} (#{@team['age']} #{@team['gender'].chars.first})"
     @current_season = @team['season']
     @last_updated = $games_cache_timestamps[@team_id]
 
@@ -159,11 +183,10 @@ get '/calendar/:id' do
     last_modified @last_updated if @last_updated
 
     erb :calendar
-
   rescue StandardError => e
     puts "Error fetching calendar data: #{e.message}"
     status 500
-    @error_message = "Ocorreu um erro ao carregar os dados da equipa. Por favor, tente novamente mais tarde."
+    @error_message = 'Ocorreu um erro ao carregar os dados da equipa. Por favor, tente novamente mais tarde.'
     erb :error
   end
 end
@@ -175,11 +198,11 @@ end
 # robots.txt for SEO
 get '/robots.txt' do
   content_type 'text/plain'
-  """
+  "
   User-agent: *
   Disallow: /health
   Sitemap: https://fpb-calendar.fly.dev/sitemap.xml
-  """
+  "
 end
 
 # Dynamic sitemap generation
@@ -187,11 +210,11 @@ get '/sitemap.xml' do
   content_type 'application/xml'
 
   # Base URL of the site
-  base_url = "https://fpb-calendar.fly.dev"
+  base_url = 'https://fpb-calendar.fly.dev'
 
   # Create array of all URLs
   urls = [
-    base_url, # Homepage
+    base_url # Homepage
   ]
 
   # Add all team calendar URLs
@@ -200,44 +223,55 @@ get '/sitemap.xml' do
   end
 
   # Generate sitemap XML
-  builder = ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
-    "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">"]
+  builder = ['<?xml version="1.0" encoding="UTF-8"?>',
+             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
 
-    urls.each do |url|
-    builder << "  <url>"
+  urls.each do |url|
+    builder << '  <url>'
     builder << "    <loc>#{url}</loc>"
     builder << "    <lastmod>#{Time.now.utc.iso8601}</lastmod>"
-    builder << "    <changefreq>daily</changefreq>"
+    builder << '    <changefreq>daily</changefreq>'
     builder << "    <priority>#{url == base_url ? '1.0' : '0.8'}</priority>"
-    builder << "  </url>"
+    builder << '  </url>'
   end
 
-  builder << "</urlset>"
+  builder << '</urlset>'
   builder.join("\n")
 end
 
 # API endpoint to get teams
 get '/api/teams' do
-  puts "[GET] /api/teams"
+  puts '[GET] /api/teams'
   content_type :json
   $teams_cache.to_json
 end
 
 # Manually refresh the cache (only when needed)
 get '/api/refresh' do
-  puts "[GET] /api/refresh"
+  puts '[GET] /api/refresh'
   content_type :json
   $teams_cache = load_teams_csv_data
-  $games_cache = load_games_csv_data($teams_cache)
+  $games_cache = MemoryBoundCache.new(30) # Reset the games cache
   $games_cache_timestamps = {}
-  { teams: $teams_cache, games: $games_cache }.to_json
+  {
+    teams_count: $teams_cache.size,
+    games_cache_size: $games_cache.size,
+    memory_usage_mb: `ps -o rss= -p #{Process.pid}`.to_i / 1024 # Add memory usage info
+  }.to_json
 end
 
 get '/api/teams/:id' do
   content_type :json
   id = params[:id].to_i
   puts "[GET] /api/teams/#{id}"
-  team = $teams_cache.find { |team| team['id'].to_i == id }
+  team = $teams_cache.find { |cached_team| cached_team['id'].to_i == id }
+
+  # Load games on demand if needed
+  unless $games_cache[id]
+    $games_cache[id] = load_games_for_team(id)
+    $games_cache_timestamps[id] = Time.now
+  end
+
   games = $games_cache[id] || []
   { team: team, games: games }.to_json
 end
@@ -280,4 +314,15 @@ post '/invite' do
     status 500
     erb :error
   end
+end
+
+# Add a debug endpoint to see memory usage (optional)
+get '/api/debug' do
+  content_type :json
+  {
+    memory_usage_mb: `ps -o rss= -p #{Process.pid}`.to_i / 1024,
+    games_cache_size: $games_cache.size,
+    games_cache_keys: $games_cache.keys,
+    teams_count: $teams_cache.size
+  }.to_json
 end
