@@ -35,6 +35,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const gamesOnDay = data.games.filter(
               game => game.date === clickedDate
             );
+            const teamName = data.team.name;
             updateMarks(calendar, data.games, clickedDate);
             setTimeout(() => {
               updateMarks(calendar, data.games, clickedDate);
@@ -53,35 +54,33 @@ document.addEventListener("DOMContentLoaded", function () {
                 const gameInfo = document.createElement("div");
 
                 const [homeTeam, awayTeam] = game.teams.split(" vs ");
-                const isHomeTeam = homeTeam === game.name;
+                const isHomeTeam = homeTeam === teamName;
 
-                let teamScore = null;
-                let opponentScore = null;
-                let didWin = null;
+                let teamScore = 0;
+                let opponentScore = 0;
+                let didWin = false;
 
-                if (game.result) {
+                if (game.result && game.result.includes("-")) {
                   const [score1, score2] = game.result.split("-").map(Number);
-                  teamScore = isHomeTeam ? score1 : score2;
-                  opponentScore = isHomeTeam ? score2 : score1;
-                  didWin = teamScore > opponentScore;
+                  if (!isNaN(score1) && !isNaN(score2)) {
+                    teamScore = isHomeTeam ? score1 : score2;
+                    opponentScore = isHomeTeam ? score2 : score1;
+                    didWin = teamScore > opponentScore;
+                  }
                 }
 
                 gameInfo.innerHTML = `
-                  <p class="competition">${game.competition}</p>
-                  <p class="location">${game.location}</p>
+                  <p class="competition">${game.competition || "N/A"}</p>
+                  <p class="location">${game.location || "N/A"}</p>
+                  ${game.time ? `<p class="time">Hora: ${game.time}</p>` : ""}
                   ${
-                    game.time &&
-                    game.time.length > 0 &&
-                    game.time != null &&
-                    `<p class="time">Hora: ${game.time}</p>`
-                  }
-                  ${
-                    game.result &&
-                    game.result.length > 0 &&
-                    game.result != null &&
-                    `<p class="result ${
-                      didWin ? "result--win" : "result--loss"
-                    }">${didWin ? "Vitória" : "Derrota"}: ${game.result}</p>`
+                    game.result
+                      ? `<p class="result ${
+                          didWin ? "result--win" : "result--loss"
+                        }">${didWin ? "Vitória" : "Derrota"}: ${
+                          game.result
+                        }</p>`
+                      : ""
                   }
                   ${
                     game.link

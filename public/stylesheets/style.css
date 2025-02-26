@@ -38,6 +38,15 @@ h2 {
   margin: 0.5rem auto 1.5rem auto;
 }
 
+.updated-at {
+  color: #888;
+  text-align: end;
+  width: 100%;
+  max-width: 600px;
+  font-size: small;
+  margin: 0;
+}
+
 form,
 .container {
   max-width: 600px;

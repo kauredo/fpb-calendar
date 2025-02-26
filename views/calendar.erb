@@ -28,13 +28,13 @@
 
     <!-- Schema.org markup for Google -->
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "SportsTeam",
-      "name": "<%= @team_name %>",
-      "url": "https://fpb-calendar.fly.dev/calendar/<%= @team_id %>",
-      "description": "Calendário de jogos da <%= @team_name %> para a época atual."
-    }
+      {
+        "@context": "https://schema.org",
+        "@type": "SportsTeam",
+        "name": "<%= @team_name %>",
+        "url": "https://fpb-calendar.fly.dev/calendar/<%= @team_id %>",
+        "description": "Calendário de jogos da <%= @team_name %> para a época atual."
+      }
     </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -59,6 +59,7 @@
       <h1>Calendário FPB</h1>
       <h2><%= @team_name %></h2>
       <div id="calendar"></div>
+      <p class="updated-at">Atualizado em <%= @last_updated.strftime("%d/%m/%Y às %H:%M") %></p>
     </main>
     <footer class="footer">
       <p>Este projeto não é afiliado com <a href="https://www.fpb.pt/" target="_blank" rel="noreferrer noopener">Federação Portuguesa de Basquetebol</a> ou qualquer uma das suas entidades. É um projeto pessoal sem fins lucrativos.</p>
