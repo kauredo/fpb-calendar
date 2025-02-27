@@ -26,7 +26,7 @@ class BulkFpbScraper
   end
 
   def scrape_all
-    log("Starting bulk scrape from ID #{@start_id}" + (@end_id ? " to #{@end_id}" : ""))
+    log("Starting bulk scrape from ID #{@start_id}" + (@end_id ? " to #{@end_id}" : ''))
 
     current_id = @start_id
     empty_team_count = 0 # Counter for consecutive empty teams
@@ -107,10 +107,10 @@ class BulkFpbScraper
 
   def generate_next_batch(current_id)
     end_of_batch = if @end_id
-      [current_id + BATCH_SIZE - 1, @end_id].min
-    else
-      current_id + BATCH_SIZE - 1
-    end
+                     [current_id + BATCH_SIZE - 1, @end_id].min
+                   else
+                     current_id + BATCH_SIZE - 1
+                   end
 
     batch = (current_id..end_of_batch).to_a
     # Filter out already scraped IDs
@@ -135,7 +135,6 @@ class BulkFpbScraper
         save_team_data(result[:id], result[:data])
         @scraped_ids.add(result[:id])
       end
-
     end
 
     save_empty_ids
@@ -156,7 +155,7 @@ class BulkFpbScraper
       sleep DELAY
 
       { success: true, id: id, data: team_data }
-    rescue => e
+    rescue StandardError => e
       retries += 1
       if retries <= MAX_RETRIES
         log("Retry #{retries}/#{MAX_RETRIES} for team #{id}: #{e.message}", :warn)

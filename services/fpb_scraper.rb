@@ -58,12 +58,11 @@ class FpbScraper
       request = Net::HTTP::Get.new(uri.request_uri)
       response = http.request(request)
 
-      if response.code.to_i == 301 || response.code.to_i == 302
-        uri = URI.parse(response['Location'])
-        redirects += 1
-      else
-        return response.body
-      end
+      return response.body unless response.code.to_i == 301 || response.code.to_i == 302
+
+      uri = URI.parse(response['Location'])
+      redirects += 1
+
     end
 
     raise "Too many redirects for URL: #{url}"
@@ -100,7 +99,7 @@ class FpbScraper
 
       day, month_abbr, year = date_text.split(/\s+/)
       english_month_abbr = MONTH_MAP[month_abbr.upcase] || month_abbr
-      date = Date.strptime("#{english_month_abbr} #{day}, #{year}", "%b %d, %Y")
+      date = Date.strptime("#{english_month_abbr} #{day}, #{year}", '%b %d, %Y')
       next if date < Date.today && !results
 
       games.concat(parse_game_details(doc, day_wrapper, date))
@@ -128,7 +127,7 @@ class FpbScraper
       teams = game_wrapper.css('span.fullName').map(&:text).map(&:strip)
       location_element = game_wrapper.at_css('div.location-wrapper')
       competition = location_element&.css('div.competition')&.text&.strip
-      location_arr = location_element&.text&.strip&.split("\r\n")&.map(&:strip)&.reject(&:empty?) - [competition]
+      location_arr = location_element&.text&.strip&.split("\r\n")&.map(&:strip)&.reject(&:empty?)&.- [competition]
       location = location_arr.first.split.join(' ') if location_arr && !location_arr.empty?
       link = game_wrapper.parent['href']
       full_link = "https://www.fpb.pt#{link}" if link
@@ -143,7 +142,7 @@ class FpbScraper
         teams: teams,
         result: result,
         location: location,
-        link: full_link,
+        link: full_link
       }
     end
 
