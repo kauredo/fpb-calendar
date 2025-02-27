@@ -174,7 +174,7 @@ get '/calendar/:id' do
       # No need to update timestamp separately - it's handled in the cache class
     end
 
-    @team_name = "#{@team['name']} (#{@team['age']} #{@team['gender'].chars.first})"
+    @team_name = "#{@team['name']} (#{@team['age']} #{@team['gender']})"
     @current_season = @team['season']
     @last_updated = $games_cache.timestamp(@team_id)
 
