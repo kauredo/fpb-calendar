@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # scrape.rb
 require_relative 'fpb_scraper'
 require 'csv'
@@ -13,8 +15,8 @@ class BulkFpbScraper
   MAX_RETRIES = 3
   MAX_EMPTY_IN_ROW = 20
   DELAY = 1 # seconds between requests
-  BASE_URL = 'https://www.fpb.pt/equipa/equipa_'.freeze
-  OUTPUT_DIR = 'data'.freeze
+  BASE_URL = 'https://www.fpb.pt/equipa/equipa_'
+  OUTPUT_DIR = 'data'
 
   def initialize(start_id: 1, end_id: nil)
     @start_id = start_id

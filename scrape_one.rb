@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 require_relative 'fpb_calendar'
 
 team_id = ARGV[0]&.to_i
 
-unless team_id && team_id > 0
+unless team_id&.positive?
   puts 'Please provide a team ID as an argument'
   puts 'Usage: ruby scrape_one.rb TEAM_ID'
   exit 1

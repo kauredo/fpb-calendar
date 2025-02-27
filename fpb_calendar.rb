@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # fpb_calendar.rb
 require_relative 'services/fpb_scraper'
 require 'googleauth'
@@ -9,8 +11,8 @@ require 'pry'
 
 Dotenv.load
 
-CALENDAR_MAPPING_FILE = 'calendars.json'.freeze
-EMAILS_FILE = 'emails.txt'.freeze
+CALENDAR_MAPPING_FILE = 'calendars.json'
+EMAILS_FILE = 'emails.txt'
 
 class FpbCalendar
   attr_reader :url, :team_data, :service, :file_path
@@ -124,7 +126,7 @@ class FpbCalendar
 
   def list_acls(calendar_id)
     acl_list = service.list_acls(calendar_id).items
-    acl_list_without_owners = acl_list.select { |acl| acl.role != 'owner' }
+    acl_list_without_owners = acl_list.reject { |acl| acl.role == 'owner' }
     puts "Listing ACLs for calendar: #{team_name}. Total ACLs: #{acl_list_without_owners.size}"
     acl_list_without_owners.each do |acl|
       puts "#{acl.scope.value} - #{acl.role}"

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Option 1: Modify the cache class to store data + timestamp
 class MemoryBoundCache
   def initialize(max_items = 30)
@@ -8,14 +10,14 @@ class MemoryBoundCache
   end
 
   def [](key)
-    return unless @cache.has_key?(key)
+    return unless @cache.key?(key)
 
     @access_times[key] = Time.now
     @cache[key]
   end
 
   def []=(key, value)
-    if @cache.size >= @max_items && !@cache.has_key?(key)
+    if @cache.size >= @max_items && !@cache.key?(key)
       # Remove least recently used item
       lru_key = @access_times.min_by { |_, time| time }[0]
       @cache.delete(lru_key)
@@ -31,8 +33,8 @@ class MemoryBoundCache
     @timestamps[key]
   end
 
-  def has_key?(key)
-    @cache.has_key?(key)
+  def key?(key)
+    @cache.key?(key)
   end
 
   def clear

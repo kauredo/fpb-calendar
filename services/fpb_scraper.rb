@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # services/fpb_scraper.rb
 require 'uri'
 require 'net/http'
@@ -34,7 +36,7 @@ class FpbScraper
     name = extract_team_name(doc)
     info = extract_team_info(doc)
 
-    name = name + ' | ' + info[:age_group] + ' ' + info[:gender] if !info[:age_group].nil? && !info[:gender].nil?
+    name = "#{name} | #{info[:age_group]} #{info[:gender]}" if !info[:age_group].nil? && !info[:gender].nil?
 
     {
       team_name: name,

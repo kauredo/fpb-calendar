@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'sinatra'
 require 'rack/attack'
 require 'csv'
@@ -101,7 +103,7 @@ get '/calendar/:id' do
     cache_expiration = ENV['CACHE_EXPIRATION'].to_i || 3600 # Default to 1 hour if not set
 
     # Use the timestamp from the cache object itself, not a separate hash
-    if !$games_cache.has_key?(@team_id) ||
+    if !$games_cache.key?(@team_id) ||
        Time.now - ($games_cache.timestamp(@team_id) || Time.at(0)) > cache_expiration
       puts "Getting fresh data for team #{@team_id}"
 
